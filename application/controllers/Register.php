@@ -51,7 +51,7 @@ class Register extends CI_Controller {
                     $this->session->set_userdata('logged_in',TRUE);
                     $this->session->set_userdata('type',$login->type);
                     $this->session->set_userdata('data_id',$login->data_id);
-                    if ($login->type == 0 || $login->type == 2){
+                    if ($login->type == 0 || $login->type == 2 || $login->type == 4){
                         echo base_url('backend');
                     } elseif($login->type == 3){
                         echo base_url('backend/report');

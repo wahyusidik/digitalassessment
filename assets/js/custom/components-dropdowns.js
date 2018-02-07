@@ -1,20 +1,26 @@
 var ComponentsDropdowns = function () {
 
+    var handleSelect2Init = function(){
+        $('.assessor').select2({
+            placeholder: "Pilih assessor",
+            allowClear: true
+        });
+    }
+
     var handleSelect2 = function () {
 
         $('#select2_sample1').select2({
             placeholder: "Select an option",
             allowClear: true
         });
-
+        
+        
         $('#select2_sample2').select2({
             placeholder: "Select a State",
             allowClear: true
         });
-        $('#toolsmultiselect').select2({
-            placeholder: "Pilih Tools",
-            allowClear: true
-        });
+        
+        
         $("#select2_sample3").select2({
             placeholder: "Select...",
             allowClear: true,
@@ -252,7 +258,7 @@ var ComponentsDropdowns = function () {
     return {
         //main function to initiate the module
         init: function () {            
-            handleSelect2();
+            handleSelect2Init();
             handleSelect2Modal();
             handleMultiSelect();
             handleBootstrapSelect();

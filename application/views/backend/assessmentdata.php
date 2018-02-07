@@ -105,6 +105,7 @@ Detail Data Assessment
                         </div>
                     </div>
                 </form>
+                <?php if($login_type == 0 ): ?>
                 <h3 class="form-section">Data Peserta</h3>
                 <div class="form-group">
                     <label class="col-md-2 control-label">Moderator</label>
@@ -143,6 +144,7 @@ Detail Data Assessment
                         </tbody>
                     </table>
                 </div>
+            <?php endif ?>
             </div>
         </div>
     </div> 

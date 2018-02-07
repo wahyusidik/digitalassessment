@@ -43,8 +43,8 @@
         <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>fullcalendar/fullcalendar.min.css" />
         <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>jqvmap/jqvmap/jqvmap.css" />
         <!-- <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>jquery-easy-pie-chart/jquery.easy-pie-chart.css" /> -->
-        <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>select2/select2.css"/>
         <!-- <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>select2/select2-bootstrap.css"/> -->
+        <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>select2/select2.css"/>
         <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>bootstrap-select/bootstrap-select.min.css"/>
         <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>jquery-multi-select/css/multi-select.css"/>
 
@@ -63,8 +63,12 @@
         <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>bootstrap-daterangepicker/daterangepicker-bs3.css"/>
         <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css"/>
         <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>bootstrap-toastr/toastr.min.css"/>
-
+        <!-- BEGIN PAGE LEVEL STYLES -->
+        <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>bootstrap-wysihtml5/bootstrap-wysihtml5.css"/>
+        <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>bootstrap-markdown/css/bootstrap-markdown.min.css">
+        <link rel="stylesheet" type="text/css" href="<?php echo PLUGIN_PATH; ?>bootstrap-summernote/summernote.css">
         <!-- END PAGE LEVEL STYLES -->
+
 
         <!-- Theme Styles ================================================= -->
         <!-- <link rel="stylesheet" type="text/css" href="<?php echo CSS_PATH; ?>style-metronic.css" />
@@ -871,9 +875,14 @@
 
 <script type="text/javascript" src="<?php echo PLUGIN_PATH; ?>bootstrap-editable/bootstrap-editable/js/bootstrap-editable.js"></script>
 <script type="text/javascript" src="<?php echo PLUGIN_PATH; ?>bootstrap-editable/inputs-ext/address/address.js"></script>
-<script type="text/javascript" src="<?php echo PLUGIN_PATH; ?>bootstrap-editable/inputs-ext/wysihtml5/wysihtml5.js"></script>
-
-
+<!-- <script type="text/javascript" src="<?php echo PLUGIN_PATH; ?>bootstrap-editable/inputs-ext/wysihtml5/wysihtml5.js"></script> -->
+<!-- BEGIN PAGE LEVEL PLUGINS -->
+<script type="text/javascript" src="<?php echo PLUGIN_PATH; ?>bootstrap-wysihtml5/wysihtml5-0.3.0.js"></script>
+<script type="text/javascript" src="<?php echo PLUGIN_PATH; ?>bootstrap-wysihtml5/bootstrap-wysihtml5.js"></script>
+<script src="<?php echo PLUGIN_PATH; ?>bootstrap-markdown/lib/markdown.js" type="text/javascript"></script>
+<script src="<?php echo PLUGIN_PATH; ?>bootstrap-markdown/js/bootstrap-markdown.js" type="text/javascript"></script>
+<script src="<?php echo PLUGIN_PATH; ?>bootstrap-summernote/summernote.min.js" type="text/javascript"></script>
+<!-- END PAGE LEVEL PLUGINS -->
 
 <!-- END PAGE LEVEL PLUGINS -->
 <!-- BEGIN PAGE LEVEL SCRIPTS -->
@@ -919,6 +928,8 @@
                 FormEditable.init();
                 UIToastr.init();
                 ComponentsDropdowns.init();
+                // ComponentsEditors.init();
+
             });
         </script>
         <!-- Script activate tooltip on member tree ================================= -->

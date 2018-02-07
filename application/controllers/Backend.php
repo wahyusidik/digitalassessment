@@ -258,7 +258,7 @@ class Backend extends CI_Controller {
 	function addassessmentact(){
         // auth_redirect();
         //   	$curent_user				= get_current_login();
-
+        $id_program     = $this->input->post('program');
     	$number 		= $this->input->post('number');
     	$type 			= $this->input->post('type');
     	$year 			= $this->input->post('year');
@@ -271,8 +271,10 @@ class Backend extends CI_Controller {
     	$participants 	= $this->input->post('participants[]');
     	$assessors 		= $this->input->post('assessors[]');
     	$moderator 		= $this->input->post('moderator');
+        $moderator      = input_isset($moderator,'');
 
-
+        $assessment_type = $this->model_member->get_assessment_type($type);
+        $form_type       = $assessment_type->form_type;
     	// Validate Input
     	// $this->form_validation->set_rules('number','Nomor','required');
      //    $this->form_validation->set_rules('type','Jenis','required');
@@ -302,6 +304,7 @@ class Backend extends CI_Controller {
         $datetime = date('Y-m-d H:i:s');
     	// Save assessment Item
         $data_assessment = array (
+            'id_program'    => $id_program,
         	'number' 		=> $number,
         	'type' 			=> $type,
         	'year' 			=> $year,
@@ -318,95 +321,114 @@ class Backend extends CI_Controller {
 
 
         if ( $assessment_id = $this->model_member->save_data('assessment',$data_assessment) ){
-        	$part_count = count($participants);
-            $seat_number = 0;
-        	for ($i=0; $i < $part_count ; $i++) { 
-        		
-
-                if ( !empty($participants[$i]) && !empty($assessors[$i]) ) {
-                    $data_assessment_part = array (
-                        'id_assessment'     => $assessment_id,
-                        'id_registration'   => $participants[$i],
-                        'id_assessor'       => $assessors[$i],
-                        'seat_number'       => $seat_number+=1,
-                        'status'            => 0,
-                        'datecreated'       => $datetime,
-                        'datemodified'      => $datetime,
-                    );
-                    if ( !$assessment_part =  $this->model_member->save_data('assessment_data',$data_assessment_part) ){
-                        $this->db->trans_rollback();
-                        // Set JSON data
-                        $data = array(
-                            'message'       => 'error',
-                            'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil.1',
+                if ($form_type == 1 ){
+            	   $part_count = count($participants);
+                    $seat_number = 0;
+                	for ($i=0; $i < $part_count ; $i++) { 
+                        if ( !empty($participants[$i]) && !empty($assessors[$i]) ) {
+                            $data_assessment_part = array (
+                                'id_assessment'     => $assessment_id,
+                                'id_registration'   => $participants[$i],
+                                'id_assessor'       => $assessors[$i],
+                                'seat_number'       => $seat_number+=1,
+                                'status'            => 0,
+                                'datecreated'       => $datetime,
+                                'datemodified'      => $datetime,
+                            );
+                            if ( !$assessment_part =  $this->model_member->save_data('assessment_data',$data_assessment_part) ){
+                                $this->db->trans_rollback();
+                                // Set JSON data
+                                $data = array(
+                                    'message'       => 'error',
+                                    'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil.',
+                                );
+                                // JSON encode data
+                                die(json_encode($data));
+                            } 
+                        } elseif ( empty($participants[$i]) && empty($assessors[$i]) ){
+                            continue;
+                        } elseif ( (!empty($participants[$i]) && empty($assessors[$i])) || (empty($participants[$i]) && !empty($assessors[$i]))){ 
+                            $this->db->trans_rollback();
+                            // Set JSON data
+                            $data = array(
+                                'message'       => 'error',
+                                'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil. Data peserta dan assessor tidak lengkap',
+                            );
+                            // JSON encode data
+                            die(json_encode($data));
+                        }
+            	    }
+                } elseif ($form_type == 2 ) {
+                    foreach ($assessors as $assessor) {
+                        $data_assessment_part = array (
+                            'id_assessment'     => $assessment_id,
+                            'id_registration'   => $participants[0],
+                            'id_assessor'       => $assessor,
+                            'seat_number'       => 1,
+                            'status'            => 0,
+                            'datecreated'       => $datetime,
+                            'datemodified'      => $datetime,
                         );
-                        // JSON encode data
-                        die(json_encode($data));
-                    } 
-                    // else{
-
-                    // }
-                } elseif ( empty($participants[$i]) && empty($assessors[$i]) ){
-                    continue;
-                } elseif ( (!empty($participants[$i]) && empty($assessors[$i])) || (empty($participants[$i]) && !empty($assessors[$i]))){ 
-                    $this->db->trans_rollback();
-                    // Set JSON data
-                    $data = array(
-                        'message'       => 'error',
-                        'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil. Data peserta dan assessor tidak lengkap',
-                    );
-                    // JSON encode data
-                    die(json_encode($data));
+                        if ( !$assessment_part =  $this->model_member->save_data('assessment_data',$data_assessment_part) ){
+                            $this->db->trans_rollback();
+                            // Set JSON data
+                            $data = array(
+                                'message'       => 'error',
+                                'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil.',
+                            );
+                            // JSON encode data
+                            die(json_encode($data));
+                        } 
+                    }
                 }
-        	}
         } else {
         	$this->db->trans_rollback();
         	 // Set JSON data
             $data = array(
                 'message'       => 'error',
-                'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil.3',
+                'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil.',
             );
             // JSON encode data
             die(json_encode($data));
         }
-        $parent         = $this->input->post('parent');
-        $param          = $this->input->post('param');
-        $paramtext      = $this->input->post('paramtext');
+        // $parent         = $this->input->post('parent');
+        // $param          = $this->input->post('param');
+        // $paramtext      = $this->input->post('paramtext');
 
-        foreach ($parent as $key => $value) {
-            foreach ($param[$key] as $i => $field) {
-                $data_report_form = array(
-                    'id_assessment'         => $assessment_id,
-                    'id_assessment_data'    => 0,
-                    'field'                 => strtolower($field),
-                    'field_text'            => $paramtext[$key][$i],
-                    'value'                 => 0,
-                    'field_parent'          => strtolower($value),
-                    'owner'                 => 0,
-                    'datecreated'           => $datetime,
-                    'datemodified'          => $datetime,
-                );
-                $report_form =  $this->model_member->save_data('assessment_report_data',$data_report_form);
-                if (!$report_form){
-                    $this->db->trans_rollback();
-                     // Set JSON data
-                    $data = array(
-                        'message'       => 'error',
-                        'data'          => '<button class="close" data-close="alert"></button>Tambah assesment tidak berhasil.4',
-                    );
-                    // JSON encode data
-                    die(json_encode($data));
-                }
-            }
-        }
+        // foreach ($parent as $key => $value) {
+        //     foreach ($param[$key] as $i => $field) {
+        //         $data_report_form = array(
+        //             'id_assessment'         => $assessment_id,
+        //             'id_assessment_data'    => 0,
+        //             'field'                 => strtolower($field),
+        //             'field_text'            => $paramtext[$key][$i],
+        //             'value'                 => 0,
+        //             'field_parent'          => strtolower($value),
+        //             'owner'                 => 0,
+        //             'datecreated'           => $datetime,
+        //             'datemodified'          => $datetime,
+        //         );
+        //         $report_form =  $this->model_member->save_data('assessment_report_data',$data_report_form);
+        //         if (!$report_form){
+        //             $this->db->trans_rollback();
+        //              // Set JSON data
+        //             $data = array(
+        //                 'message'       => 'error',
+        //                 'data'          => '<button class="close" data-close="alert"></button>Tambah assesment tidak berhasil.4',
+        //             );
+        //             // JSON encode data
+        //             die(json_encode($data));
+        //         }
+        //     }
+        // }
         $this->db->trans_commit();
 
 
-        $con = " WHERE %id_assessment% = ".$assessment_id.' ';
-        $assess = $this->model_member->get_assessment_data($con);
-        foreach ($assess as $row) {
-            $this->mailer->send_email_assessment($row->reg_email,$row);
-        }
+        // $con = " WHERE %id_assessment% = ".$assessment_id.' ';
+        // $assess = $this->model_member->get_assessment_data($con);
+        // foreach ($assess as $row) {
+        //     $this->mailer->send_email_assessment($row->reg_email,$row);
+        // }
        // Set JSON data
         $data = array(
             'message'       => 'success',
@@ -421,6 +443,7 @@ class Backend extends CI_Controller {
         $curent_user                = get_current_login();
         $data['title']              = TITLE . 'Detail Data Assessment';
         $data['user']               = $curent_user;
+        $data['login_type']         = get_login_type();
         $data['assessment']         = get_assessment_detail($id);
         $data['main_content']       = 'assessmentdata';
         
@@ -742,6 +765,43 @@ class Backend extends CI_Controller {
             $this->load->view(VIEW_BACK . 'template', $data);
         }
     }
+    function assessmentreportfinal($id = '' ){
+        auth_redirect();
+        $curent_user                = get_current_login();
+        $data['title']              = TITLE . 'Laporan Akhir Program Assessment';
+        $data['user']               = $curent_user;
+        $data['is_admin']           = is_admin($curent_user);
+        $data['login_type']         = get_login_type();
+
+        // $con = ' where %id_program% = '.$id.' ';
+        $data['program']                = $this->model_member->get_program_data($id);
+        $data['program_report']         = $this->model_member->get_report_program($id);
+        $data['main_content']       = 'reportfinalall';
+        
+        if ($id == '' || empty($id) || !$data['program'] ) {
+             redirect('backend/reportprogram');
+        } else {
+            $this->load->view(VIEW_BACK . 'template', $data);
+        }
+    }
+     function addassessmentreportint($id_program, $id_registration = '' ){
+        auth_redirect();
+        $curent_user                = get_current_login();
+        $data['title']              = TITLE . 'Laporan Akhir Assessment';
+        $data['user']               = $curent_user;
+        $data['is_admin']           = is_admin($curent_user);
+        $data['login_type']         = get_login_type();
+
+        // $con = ' where %id_assessment% = '.$id.' ';
+        $data['reportint']         = $this->model_member->get_report_tools_int($id_program,$id_registration);
+        $data['main_content']       = 'assessmentreportint';
+        
+        // if ($id == '' || empty($id) ) {
+        //      redirect('backend/assessmentlist');
+        // } else {
+            $this->load->view(VIEW_BACK . 'template', $data);
+        // }
+    }
 
         // Process Add Report Assessment
     function addreportact(){
@@ -751,20 +811,21 @@ class Backend extends CI_Controller {
         $type                   = $this->input->post('assessment_type');
         $id_assessment_data     = $this->input->post('id_assessment_data');
         $id_assessment          = $this->input->post('id_assessment');
-        $id_assessor          = $this->input->post('id_assessor');
+        $id_assessor            = $this->input->post('id_assessor');
+        $form_type              = $this->input->post('form_type');
 
         // Data Competence Report
         $parent         = $this->input->post('parent');
         $param          = $this->input->post('param[]');
         $paramtext      = $this->input->post('paramtext[]');
-        $level          = $this->input->post('level[]');
+        $competences    = $this->input->post('competences');
         $data_report = array();
         // input form for assesment LGD
-        if ($type == 1 ) {
+        if ($form_type == 1 ) {
             $note_assesse           = $this->input->post('note_assesse');
-            $note_assesse           = isset_input($note_assesse ,'' );
+            // $note_assesse           = isset_input($note_assesse ,'' );
             $note_assesse_other     = $this->input->post('note_assesse_other');
-            $note_assesse_other     = isset_input($note_assesse_other, '' );
+            // $note_assesse_other     = isset_input($note_assesse_other, '' );
 
             $data_report = array (
                 'id_assessment_data'    => $id_assessment_data,
@@ -773,7 +834,7 @@ class Backend extends CI_Controller {
                 'datecreated'           => $datetime,
                 'datemodified'          => $datetime,
             );
-        } elseif ($type == 2) {
+        } elseif ($form_type == 2) {
             $notes                  = $this->input->post('notes');
             $notes                  = isset_input($notes, '' );
 
@@ -783,23 +844,7 @@ class Backend extends CI_Controller {
                 'datecreated'           => $datetime,
                 'datemodified'          => $datetime,
             );
-        } elseif ($type == 3) {
-            $note_assesse           = $this->input->post('note_assesse');
-            $note_assesse           = isset_input($note_assesse ,'' );
-            $note_assesse_other     = $this->input->post('note_assesse_other');
-            $note_assesse_other     = isset_input($note_assesse_other, array() );
-            $notes                  = $this->input->post('notes');
-            $notes                  = isset_input($notes, '' );
-
-            $data_report = array (
-                'id_assessment_data'    => $id_assessment_data,
-                'note_assesse'          => $note_assesse,
-                'note_assesse_other'    => serialize($note_assesse_other),
-                'notes'                 => $notes,
-                'datecreated'           => $datetime,
-                'datemodified'          => $datetime,
-            );
-        } 
+        }
         // Validate Input
         // $this->form_validation->set_rules('number','Nomor','required');
      //    $this->form_validation->set_rules('type','Jenis','required');
@@ -843,16 +888,13 @@ class Backend extends CI_Controller {
                 // JSON encode data
                 die(json_encode($data));
             } else {
-                foreach ($parent as $key => $value) {
-                    foreach ($param[$key] as $i => $field) {
+                foreach ($competences as $key => $value) {
                         $data_report_form = array(
                             'id_assessment'         => $id_assessment,
                             'id_assessment_data'    => $id_assessment_data,
-                            'field'                 => strtolower($field),
-                            'field_text'            => $paramtext[$key][$i],
-                            'value'                 => ($level[$key][0] == $field ? 1 : 0 ),
-                            'field_parent'          => strtolower($value),
-                            'owner'                 => $id_assessor,
+                            'id_competence'         => $key,
+                            'level'                 => $value,
+                            'evidence'              => $paramtext[$key][$value],
                             'datecreated'           => $datetime,
                             'datemodified'          => $datetime,
                         );
@@ -867,7 +909,6 @@ class Backend extends CI_Controller {
                             // JSON encode data
                             die(json_encode($data));
                         }
-                    }
                 }
             }
         } else {
@@ -909,15 +950,20 @@ class Backend extends CI_Controller {
         $id_assessment_data     = $this->input->post('id_assessment_data');
         $id_assessment          = $this->input->post('id_assessment');
         $id_assessor            = $this->input->post('id_assessor');
+        $id_moderator           = $this->input->post('id_moderator');
+        $id_registration        = $this->input->post('id_registration');
+        $id_program        = $this->input->post('id_program');
+        $form_type            = $this->input->post('form_type');
 
         $parent         = $this->input->post('parent');
         $param          = $this->input->post('param[]');
         $paramtext      = $this->input->post('paramtext[]');
+        $competences    = $this->input->post('competences');
         $level          = $this->input->post('level[]');
 
         $data_report = array();
         // input form for assesment LGD
-        if ($type == 1 ) {
+        if ($form_type == 1 ) {
             $note_assesse           = $this->input->post('note_assesse');
             $note_assesse           = isset_input($note_assesse ,'' );
             $note_assesse_other     = $this->input->post('note_assesse_other');
@@ -925,8 +971,10 @@ class Backend extends CI_Controller {
             $notes     = $this->input->post('notes');
             $notes     = isset_input($note_assesse_other, '' );
             $data_report = array (
+                'id_program'            => $id_program,
                 'id_assessment'         => $id_assessment,
-                'id_assessment_data'    => $id_assessment_data,
+                'id_moderator'          => $id_moderator,
+                'id_registration'       => $id_registration,
                 'note_assesse'          => $note_assesse,
                 'note_assesse_other'    => serialize($note_assesse_other),
                 'notes'                 => $notes,
@@ -938,23 +986,10 @@ class Backend extends CI_Controller {
             $notes                  = isset_input($notes, '' );
 
             $data_report = array (
+                'id_program'            => $id_program,
                 'id_assessment'         => $id_assessment,
-                'id_assessment_data'    => $id_assessment_data,
-                'notes'                 => $notes,
-                'datecreated'           => $datetime,
-                'datemodified'          => $datetime,
-            );
-        } elseif ($type == 3) {
-            $note_assesse           = $this->input->post('note_assesse');
-            $note_assesse           = isset_input($note_assesse ,'' );
-            $note_assesse_other     = $this->input->post('note_assesse_other');
-            $note_assesse_other     = isset_input($note_assesse_other, array() );
-            $notes                  = $this->input->post('notes');
-            $notes                  = isset_input($notes, '' );
-
-            $data_report = array (
-                'id_assessment'         => $id_assessment,
-                'id_assessment_data'    => $id_assessment_data,
+                'id_moderator'          => $id_moderator,
+                'id_registration'       => $id_registration,
                 'notes'                 => $notes,
                 'datecreated'           => $datetime,
                 'datemodified'          => $datetime,
@@ -990,36 +1025,60 @@ class Backend extends CI_Controller {
 
         $this->db->trans_begin();
 
-        if ( $report_final_id = $this->model_member->save_data('assessment_report_final',$data_report) ){
-            $update_assessment_data = array(
+        if ( $report_tool_id = $this->model_member->save_data('assessment_report_tool',$data_report) ){
+            if ($form_type == 1){
+                $update_assessment_data = array(
                 'status'    => 2,
                 'datemodified' => $datetime,
-            );
-            $con = array( 'id' => $id_assessment_data);
-            if (!$update_status = $this->model_member->update_data('assessment_data',$con,$update_assessment_data)){
-                $this->db->trans_rollback();
-                 // Set JSON data
-                $data = array(
-                    'message'       => 'error',
-                    'data'          => '<button class="close" data-close="alert"></button>Tambah laporan assesment tidak berhasil.',
                 );
-                // JSON encode data
-                die(json_encode($data));
+                $con['conditions'] = array( 'id_assessment' => $id_assessment);
+                if (!$update_status = $this->model_member->update_data('assessment_data',$con,$update_assessment_data)){
+                    $this->db->trans_rollback();
+                     // Set JSON data
+                    $data = array(
+                        'message'       => 'error',
+                        'data'          => '<button class="close" data-close="alert"></button>Tambah laporan assesment tidak berhasil.',
+                    );
+                    // JSON encode data
+                    die(json_encode($data));
+                }
+            } elseif ($form_type == 2) {
+                $update_assessment_data = array(
+                'status'    => 2,
+                'datemodified' => $datetime,
+                );
+                $con['conditions'] = array( 'id_assessment' => $id_assessment);
+                if (!$update_status = $this->model_member->update_data('assessment_data',$con,$update_assessment_data)){
+                    $this->db->trans_rollback();
+                     // Set JSON data
+                    $data = array(
+                        'message'       => 'error',
+                        'data'          => '<button class="close" data-close="alert"></button>Tambah laporan assesment tidak berhasil.',
+                    );
+                    // JSON encode data
+                    die(json_encode($data));
+                }
+            } else{
+                 $data = array(
+                        'message'       => 'error',
+                        'data'          => '<button class="close" data-close="alert"></button>salaaaaaah.',
+                    );
+                    // JSON encode data
+                    die(json_encode($data));
             }
-            foreach ($parent as $key => $value) {
-                    foreach ($param[$key] as $i => $field) {
+            
+            foreach ($competences as $key => $value) {
                         $data_report_form = array(
                             'id_assessment'         => $id_assessment,
+                            'id_report_tool'         => $report_tool_id,
                             'id_assessment_data'    => $id_assessment_data,
-                            'field'                 => $field,
-                            'field_text'            => $paramtext[$key][$i],
-                            'value'                 => ($level[$key][0] == $field ? 1 : 0 ),
-                            'field_parent'          => $value,
-                            'owner'                 => $id_assessor,
+                            'id_competence'         => $key,
+                            'level'                 => $value,
+                            'evidence'              => '',
                             'datecreated'           => $datetime,
                             'datemodified'          => $datetime,
                         );
-                        $report_form =  $this->model_member->save_data('assessment_report_final_data',$data_report_form);
+                        $report_form =  $this->model_member->save_data('assessment_report_tool_data',$data_report_form);
                         if (!$report_form){
                             $this->db->trans_rollback();
                              // Set JSON data
@@ -1030,7 +1089,6 @@ class Backend extends CI_Controller {
                             // JSON encode data
                             die(json_encode($data));
                         }
-                    }
                 }
         } else {
             $this->db->trans_rollback();
@@ -1052,9 +1110,130 @@ class Backend extends CI_Controller {
         // JSON encode data
         die(json_encode($data));
     }
+    function addreportfinalintact(){
+        // auth_redirect();
+        $curent_user                = get_current_login();
+        $datetime               = date('Y-m-d H:i:s');
+        // $type                   = $this->input->post('assessment_type');
+        // $id_assessment_data     = $this->input->post('id_assessment_data');
+        // $id_assessment          = $this->input->post('id_assessment');
+        $id_lead            = $curent_user->id;
+        $id_moderator           = $this->input->post('id_moderator');
+        $id_registration        = $this->input->post('id_registration');
+        $id_program        = $this->input->post('id_program');
+        $form_type            = $this->input->post('form_type');
+
+        $parent         = $this->input->post('parent');
+        $param          = $this->input->post('param[]');
+        $paramtext      = $this->input->post('paramtext[]');
+        $competences    = $this->input->post('competences');
+        $level          = $this->input->post('level[]');
+
+        $notes     = $this->input->post('notes');
+        $notes     = isset_input($note_assesse_other, '' );
+        $data_report = array (
+            'id_program'            => $id_program,
+            'id_registration'       => $id_registration,
+            'id_lead'               => $id_lead,
+            'notes'                 => $notes,
+            'datecreated'           => $datetime,
+            'datemodified'          => $datetime,
+        );
+        
+
+        // Validate Input
+        // $this->form_validation->set_rules('number','Nomor','required');
+     //    $this->form_validation->set_rules('type','Jenis','required');
+     //    $this->form_validation->set_rules('year','Tahun','required');
+     //    $this->form_validation->set_rules('position','Jabatan','required');
+     //    $this->form_validation->set_rules('date','Tanggal','required');
+     //    $this->form_validation->set_rules('time','Jam','required');
+     //    $this->form_validation->set_rules('room','Ruangan','required');
+     //    $this->form_validation->set_rules('participants','Peserta','required');
+     //    $this->form_validation->set_rules('assessors','Assessor','required');
+     //    $this->form_validation->set_rules('moderator','moderator','required');
+        
+     //    $this->form_validation->set_message('required', '%s harus di isi');
+     //    $this->form_validation->set_error_delimiters('', '');
+        
+     //    if($this->form_validation->run() == FALSE){
+     //        // Set JSON data
+     //        $data = array(
+     //            'message'       => 'error',
+     //            'data'          => '<button class="close" data-close="alert"></button>Pendaftaran anggota baru tidak berhasil. '.validation_errors().'',
+     //        );
+     //        // JSON encode data
+     //        die(json_encode($data));
+     //    }
+
+        $this->db->trans_begin();
+
+        if ( $report_final_id = $this->model_member->save_data('assessment_report_final',$data_report) ){
+            
+            $update_status_register= array(
+            'status'    => 4,
+            'datemodified' => $datetime,
+            );
+            // $con['condition'] = array( 
+            //     'id_assessment_program' => $id_program,
+            //     'id_assessment_program' => $id_program,
+            // );
+            $con = array ( 'id' => $id_registration);
+            if (!$update_status = $this->model_member->update_data('registration',$con,$update_status_register)){
+                $this->db->trans_rollback();
+                 // Set JSON data
+                $data = array(
+                    'message'       => 'error',
+                    'data'          => '<button class="close" data-close="alert"></button>Tambah laporan integrasi tidak berhasil.',
+                );
+                // JSON encode data
+                die(json_encode($data));
+            }
+            
+            foreach ($competences as $key => $value) {
+                        $data_report_form = array(
+                            'id_report_final'         => $report_final_id,
+                            'id_competence'         => $key,
+                            'level'                 => $value,
+                            'evidence'              => '',
+                            'datecreated'           => $datetime,
+                            'datemodified'          => $datetime,
+                        );
+                        $report_form =  $this->model_member->save_data('assessment_report_final_data',$data_report_form);
+                        if (!$report_form){
+                            $this->db->trans_rollback();
+                             // Set JSON data
+                            $data = array(
+                                'message'       => 'error',
+                                'data'          => '<button class="close" data-close="alert"></button>Tambah laporan integrasi tidak berhasil.',
+                            );
+                            // JSON encode data
+                            die(json_encode($data));
+                        }
+                }
+        } else {
+            $this->db->trans_rollback();
+             // Set JSON data
+            $data = array(
+                'message'       => 'error',
+                'data'          => '<button class="close" data-close="alert"></button>Tambah laporan integrasi tidak berhasil.',
+            );
+            // JSON encode data
+            die(json_encode($data));
+        }
+        // update_assessment_status($id_assessment);
+        $this->db->trans_commit();
+       // Set JSON data
+        $data = array(
+            'message'       => 'success',
+            'data'          => '<button class="close" data-close="alert"></button>Laporan integrasi berhasil dibuat.',
+        );
+        // JSON encode data
+        die(json_encode($data));
+    }
 
 
-    function assessmentmine($id = 0 , $week = 0 ){
+    function assessmentmine($id = 0 , $week = '' ){
         
       $curent_user  = get_current_login();
       $login_type   = get_login_type();
@@ -1068,7 +1247,7 @@ class Backend extends CI_Controller {
       $records["data"] = array(); 
       $condition = ' WHERE 1 = 1 ';
       if($login_type != 0 ) {if ($id != 0) { $condition .= ' AND %id_assessor% = '.$id.' '; } }
-    if ($week != 0) { $condition .= ' AND YEARWEEK(D.date) = YEARWEEK(NOW()) '; }
+      if (!empty($week)) { $condition .= ' AND YEARWEEK(D.date) = YEARWEEK(NOW()) '; }
 
         $limit              = ( $iDisplayLength == '-1' ? 0 : $iDisplayLength );
         $offset             = $iDisplayStart;
@@ -1153,7 +1332,7 @@ class Backend extends CI_Controller {
                     '<center>'.$row->time.'</center>',
                     '<center>'.$row->assessment_number.'</center>',
                     '<center>'.$row->assessment_name.'</center>',
-                    '<center>'.$row->position.'</center>',
+                    '<center>'.$row->position_name.'</center>',
                     '<center>'.$row->room.'</center>',
                     '<center>'.$status.'</center>',
                     '<center>'.$addreportbutton.$addfinalreportbutton.'</center>',
@@ -1262,6 +1441,8 @@ class Backend extends CI_Controller {
         $uploadend         = input_isset($this->input->post('uploadend'),'');
         $docs         = input_isset($this->input->post('docs[]'),'');
         $tools         = input_isset($this->input->post('tools[]'),'');
+        $id_lead                     = input_isset($this->input->post('id_lead'),'');
+
 
 
         // Validate Input
@@ -1296,18 +1477,18 @@ class Backend extends CI_Controller {
             'number'        => $number,
             'title'        => $title,
             'year'          => $year,
-            'position'      => $position,
+            'position'      => implode(',', $position),
             'datestart'     => $datestart,
             'dateend'       => $dateend,
             'doc_upload'    => 0,
             'status'        => 0,
             'uploadstart'   => $uploadstart,
-            'tools'         => implode(',', $tools),
             'uploadend'     => $uploadend,
             'created_by'    => $curent_user->username,
             'created_by'    => $curent_user->username,
             'datecreated'   => $datetime,
             'datemodified'  => $datetime,
+            'id_lead'       => $id_lead,
         );
 
 
@@ -1335,12 +1516,53 @@ class Backend extends CI_Controller {
                 }
                  $code++;
             }
+           
+            // $position = explode(',', $position);
+            foreach ($position as $pos =>$value) {
+                $poss = explode(',', $value);
+                foreach ($poss as $posin) {
+                    for ($i=0; $i < 6 ; $i++) {
+                    $random_int  = rand(0, 100);
+                    $datapeserta = array (
+                                'id_assessment_program'       => $program_id,
+                                'number'              => $program_id.$random_int,
+                                'username'        => 'peserta'.$program_id.$posin.$random_int,
+                                'password'        => md5('123456'),
+                                'name'        => 'Peserta '.$program_id.$posin.$random_int,
+                                'email'        => 'peserta'.$program_id.$posin.$random_int.'@admin.com',
+                                'position'        => $posin,
+                                'status'        => '1',
+                                'document'        => '0',
+                                'engagement'        => '0',
+                                // 'datecreated'       => $datetime,
+                                // 'datemodified'      => $datetime,
+                            );
+                    $id_peserta = $this->model_member->save_data('registration',$datapeserta);
+                    $datauser = array(
+                        'username'        => 'peserta'.$program_id.$posin.$random_int,
+                        'password'        => md5('123456'),
+                        'name'        => 'Peserta '.$program_id.$posin.$random_int,
+                        'email'        => 'peserta'.$program_id.$posin.$random_int.'@admin.com',
+                        'email_feedback' => '0',
+                        'type'        => '1',
+                        'status'        => '1',
+                        'data_id'        => $id_peserta,
+                        'datecreated'       => $datetime,
+                        'datemodified'      => $datetime,
+                    );
+                    $id_user= $this->model_member->save_data('user',$datauser);
+
+                }
+                }
+               
+            }
+            
         } else {
             $this->db->trans_rollback();
              // Set JSON data
             $data = array(
                 'message'       => 'error',
-                'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment tidak berhasil.',
+                'data'          => '<button class="close" data-close="alert"></button>Tambah Program Assesment tidak berhasil.',
             );
             // JSON encode data
             die(json_encode($data));
@@ -1351,11 +1573,12 @@ class Backend extends CI_Controller {
        // Set JSON data
         $data = array(
             'message'       => 'success',
-            'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment berhasil.',
+            'data'          => '<button class="close" data-close="alert"></button>Tambah Program Assesment berhasil.',
         );
         // JSON encode data
         die(json_encode($data));
     }
+    //========================================
 
     function toolget(){
         $id_program        = $this->input->post('id_program');
@@ -1407,8 +1630,9 @@ class Backend extends CI_Controller {
             // jumlah PIN yg tersedia
             $toolsdata = get_program_tools($id_program);
             if ($toolsdata || !empty($toolsdata)) {
+                    $tools .= '<option value="" >Pilih Jenis Assesment</option>';
                 foreach ($toolsdata as $tool) {
-                    $tools .= '<option value="' . $tool->id . '">' . $tool->name . '</option>';
+                    $tools .= '<option value="' . $tool->id . '" >' . $tool->name . '</option>';
                 }
                 // Set JSON data
                 $data = array(
@@ -1417,12 +1641,777 @@ class Backend extends CI_Controller {
             } else {
                 // Set JSON data
                 $data = array(
-                    'result' => '<option value="">Tidak ada pilihan Tools2</option>',
+                    'result' => '<option value="">Tidak ada pilihan Tools</option>',
                 );
             }
         }
         // JSON encode data
         die(json_encode($data));
     }
+
+    function getformpart(){
+
+        $type = $this->input->post('type');
+        $program = $this->input->post('program');
+        $position = $this->input->post('position');
+
+        $participant= '';
+        $data = array();
+        $form = '';
+
+        if (!$position || empty($position)) {
+            $participant = '<option value="" >Tidak ada pilihan peserta</option>';
+        }else{
+            $part =  $this->model_member->search_participant($program,$position);
+            if ($part || !empty($part)){
+                foreach ($part as $row ) {
+                   $participant .= '<option value="'.$row->id.'" >'.$row->number.'-'.$row->name.'</option>';
+                }
+            } else{
+                $participant .= '<option value="" >Tidak ada pilihan peserta</option>';
+            }
+        }
+        $assessor = '';
+        $assessordata =  $this->model_member->get_assessor();
+            if ($assessordata || !empty($assessordata)){
+                foreach ($assessordata as $row ) {
+                   $assessor .= '<option value="'.$row->id.'" >'.$row->name.'</option>';
+                }
+            } else{
+                $assessor .= '<option value="" >Tidak ada pilihan assessor</option>';
+            }
+        if (!$type || empty($type)) {
+            // Set JSON data
+            $data = array(
+                'result' => 'Belum ada template form peserta',
+            );
+        } else {
+            // jumlah PIN yg tersedia
+            $typedata = $this->model_member->get_data('assessment_type',array('id'=>$type));
+            if ($typedata || !empty($typedata)) {
+
+
+                if ( $typedata->form_type == '1'){
+                    $form .= '<div class="participants-list" id="participants-list" max-participant="'.$typedata->max_participant.'"> ';
+                    for ($i=0; $i <6 ; $i++) {
+                        $form .= '<div class="form-group">
+                                        <label class="col-md-2 control-label bs-select">Nama Peserta</label>
+                                        <div class="col-md-4">
+                                            <select class="form-control participants bs-select" data-live-search="true" name="participants[]">
+                                        <option value="">Pilih peserta</option>
+                                                '.$participant.'
+                                            </select>
+                                        </div>
+                                        <label class="col-md-2 control-label">Nama assessor</label>
+                                        <div class="col-md-4">
+                                            <select class="form-control assessors bs-select" data-live-search="true" name="assessors[]" >
+                                                <option value="">Pilih assessor</option>
+                                                '.$assessor.'
+                                            </select>
+                                        </div>
+                                    </div>';
+                    }
+                    $form .= '</div><!--<a href="javascript:;" class="btn green addparticipant" id="addparticipant">
+                                <i class="fa fa-plus"></i> Tambah Peserta
+                            </a>-->';
+                    $form .= '<div class="form-group">
+                                <label class="col-md-2 control-label">Lead Assessor</label>
+                                <div class="col-md-4">
+                                    <select class="form-control assessor bs-select" data-live-search="true" name="moderator" id="moderator">
+                                        <option value="">Pilih Lead Assessor</option>
+                                                '.$assessor.'
+                                    </select>
+                                </div>
+                            </div>';
+                    // Set JSON data
+                    $data = array(
+                        'result' => $form,
+                    );
+                } elseif ($typedata->form_type == '2'){
+                    $form .= '<div class="form-group">
+                                <label class="col-md-2 control-label">Nama Peserta</label>
+                                <div class="col-md-4">
+                                    <select class="form-control participants bs-select" data-live-search="true" name="participants[]">
+                                        <option value="">Pilih peserta</option>
+                                        '.$participant.'
+                                    </select>
+                                </div>
+                            </div>';
+                    $form .= '<div class="assessor-list" id="assessor-list" max-assessor="'.$typedata->max_assessor.'">
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">Assessor</label>
+                                    <div class="col-md-4">
+                                        <select class="form-control assessors bs-select" data-live-search="true" name="assessors[]">
+                                            <option value="">Pilih Assessor</option>
+                                            '.$assessor.'
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">Assessor</label>
+                                    <div class="col-md-4">
+                                        <select class="form-control assessors bs-select" data-live-search="true" name="assessors[]">
+                                            <option value="">Pilih Assessor</option>
+                                            '.$assessor.'
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>';
+                    $form .= '<div class="form-group">
+                                <label class="col-md-2 control-label">Lead Assessor</label>
+                                <div class="col-md-4">
+                                    <select class="form-control assessor bs-select" data-live-search="true" name="moderator" id="moderator">
+                                        <option value="">Pilih Lead Assessor</option>
+                                                '.$assessor.'
+                                    </select>
+                                </div>
+                            </div>';
+                    $data = array(
+                        'result' => $form,
+                    );
+                }
+                die(json_encode($data));
+
+            } else {
+                // Set JSON data
+                $data = array(
+                    'result' => '<option value="">Tidak ada form </option>',
+                );
+                die(json_encode($data));
+            }
+        }
+    }
+
+    function getcompetence(){
+
+        // $type = $this->input->post('type');
+        $position = $this->input->post('position');
+
+        $list= '';
+        $data = array();
+        $form = '';
+
+        $competencedata =  $this->model_member->get_competence_profil($position);
+        if ($competencedata || !empty($competencedata)){
+            $competencedata = explode(',', $competencedata->competences);
+            $parent = 0;
+            foreach ($competencedata as $id ) {
+            $competence = $this->model_member->get_competence($id);
+            $level = $this->model_member->get_competence_level($competence->id);
+            $levels = '';
+            $child = 0;
+            foreach ($level as $row ) {
+                $count = $child+1;
+                $levels.=   '<tr class="paramfielditem">
+                                <td>
+                                    <!--div class="input-group">
+                                        <div class="icheck-list">
+                                            <input type="radio" id="level'.$parent.$child.'" name="level['.$parent.'][]" value="" class="icheck" data-radio="iradio_flat-grey">
+                                        </div>
+                                    </div>-->
+                                </td>
+                                <td>
+                                    <!--<input type="hidden" name="param['.$parent.'][]" id-radio="level'.$parent.$child.'" class="form-control level-title" placeholder="Nama Level" value="'.$row->title.'" >--><p class="popovers" data-html="true" data-container="body" data-trigger="hover" data-placement="bottom" data-content="'.$row->definition.'" data-original-title="Keterangan">'.$count.'. '.$row->title.'<p>
+                                </td>
+                                <td><!--<textarea type="text" name="paramtext['.$parent.'][]" class="form-control" placeholder="Keterangan" value=""></textarea>--></td>
+                                <!-- <td><a class="closeparam close" data-close="paramfielditem"></a></td> -->
+                            </tr>';
+                $child++;
+            }
+               $list .= '
+               <tr class="parentfielditem">
+                    <td><!--<a class="closeparent close" data-close="parentfielditem"></a>--></td>
+                    <td>
+                        <!--<input type="text" class="form-control" name="parent['.$parent.']" placeholder="'.$competence->name.'" value="'.$competence->name.'" disabled readonly>-->
+                        <h2>'.$competence->name.'</h2>
+                        <br><p>'.$competence->definition.'</p>
+                    </td>
+                    <td>
+                        <table class="table paramfield-table radio-list" >
+                            <tbody class="paramfield" parent="0" child="1">
+                            '.$levels.'
+                            </tbody>
+                        </table>
+                    </td>   
+                </tr>';
+                $parent++;
+            }
+            $data = array(
+                'result' => $list,
+            );
+            die(json_encode($data));
+        } else{
+            $list .= 'Belum ada template';
+            // Set JSON data
+            $data = array(
+                'result' => $list,
+            );
+            die(json_encode($data));
+        }
+    }
+    //========================
+    function addcompetence(){
+        auth_redirect();
+        $curent_user                = get_current_login();
+        $data['title']              = TITLE . 'Tambah Kompetensi';
+        $data['user']               = $curent_user;
+        $data['is_admin']           = is_admin($curent_user);
+        $data['login_type']         = get_login_type();
+
+        $data['main_content']       = 'addcompetence';
+
+        $this->load->view(VIEW_BACK . 'template', $data);
+    }
+    function addcompetenceact(){
+        // auth_redirect();
+        $curent_user                = get_current_login();
+
+        $name         = $this->input->post('name');
+        $name_short           = $this->input->post('name_short');
+        $desc           = $this->input->post('desc');
+        $levelname       = $this->input->post('levelname');
+        $leveldesc      = $this->input->post('leveldesc');
+
+        $this->db->trans_begin();
+        $datetime = date('Y-m-d H:i:s');
+        // Save assessment Item
+        $data_competence = array (
+            'name'          => $name,
+            'name_short'    => $name_short,
+            'definition'    => $desc,
+        );
+
+
+        if ( $competence_id = $this->model_member->save_data('competence',$data_competence) ){
+            
+            $level_count = count($levelname);
+            for ($i=0; $i < $level_count ; $i++) { 
+                $level = $i+1;
+                $data_level = array (
+                    'id_competence'     => $competence_id,
+                    'level'             => $level,
+                    'title'             => $levelname[$i],
+                    'definition'        => $leveldesc[$i],
+                );
+                if ( !$level_id =  $this->model_member->save_data('competence_level',$data_level) ){
+                    $this->db->trans_rollback();
+                    // Set JSON data
+                    $data = array(
+                        'message'       => 'error',
+                        'data'          => '<button class="close" data-close="alert"></button>Tambah Kompetensi tidak berhasil',
+                    );
+                    // JSON encode data
+                    die(json_encode($data));
+                }
+            }
+        } else {
+            $this->db->trans_rollback();
+             // Set JSON data
+            $data = array(
+                'message'       => 'error',
+                'data'          => '<button class="close" data-close="alert"></button>Tambah Kompetensi tidak berhasil',
+            );
+            // JSON encode data
+            die(json_encode($data));
+        }
+       
+        $this->db->trans_commit();
+       // Set JSON data
+        $data = array(
+            'message'       => 'success',
+            'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment berhasil.',
+        );
+        // JSON encode data
+        die(json_encode($data));
+    }
+    function editcompetence($id=''){
+        auth_redirect();
+        $curent_user                = get_current_login();
+        $data['title']              = TITLE . 'Tambah Kompetensi';
+        $data['user']               = $curent_user;
+        $data['is_admin']           = is_admin($curent_user);
+        $data['login_type']         = get_login_type();
+
+        $competence                 = $this->model_member->get_competence($id);
+        $data['competence']         = $competence;
+        $data['main_content']       = 'editcompetence';
+
+        if (!$competence || empty($competence)){
+             redirect('backend/assessmentlist');
+        } else{
+            $this->load->view(VIEW_BACK . 'template', $data);
+        }
+    }
+
+    function editcompetenceact(){
+        // auth_redirect();
+        $curent_user                = get_current_login();
+        $id             = $this->input->post('id');
+        $name           = $this->input->post('name');
+        $name_short     = $this->input->post('name_short');
+        $desc           = $this->input->post('desc');
+        $levelid      = $this->input->post('levelid');
+        $levelname      = $this->input->post('levelname');
+        $leveldesc      = $this->input->post('leveldesc');
+
+        $this->db->trans_begin();
+        $datetime = date('Y-m-d H:i:s');
+        // Save assessment Item
+        $data_competence = array (
+            'name'          => $name,
+            'name_short'    => $name_short,
+            'definition'    => $desc,
+        );
+
+        $con['id'] = $id;
+        if ( $competence_id = $this->model_member->update_data('competence',$con,$data_competence) ){
+            $id = 1;
+            $level_count = count($levelid);
+            foreach ($levelid as $ids ) {
+                $data_level = array (
+                    'level'             => $id,
+                    'title'             => $levelname[$id],
+                    'definition'        => $leveldesc[$id],
+                );
+                $con2['id'] = $ids;
+                if ( !$level_id =  $this->model_member->update_data('competence_level',$con2,$data_level) ){
+                    $this->db->trans_rollback();
+                    // Set JSON data
+                    $data = array(
+                        'message'       => 'error',
+                        'data'          => '<button class="close" data-close="alert"></button>Tambah Kompetensi tidak berhasil',
+                    );
+                    // JSON encode data
+                    die(json_encode($data));
+                }
+                $id++;
+            }
+        } else {
+            $this->db->trans_rollback();
+             // Set JSON data
+            $data = array(
+                'message'       => 'error',
+                'data'          => '<button class="close" data-close="alert"></button>Tambah Kompetensi tidak berhasil',
+            );
+            // JSON encode data
+            die(json_encode($data));
+        }
+       
+        $this->db->trans_commit();
+       // Set JSON data
+        $data = array(
+            'message'       => 'success',
+            'data'          => '<button class="close" data-close="alert"></button>Tambah Assesment berhasil.',
+        );
+        // JSON encode data
+        die(json_encode($data));
+    }
+
+    function addtoolstemplate($id=''){
+        auth_redirect();
+        $curent_user                = get_current_login();
+        $data['title']              = TITLE . 'Tambah Kompetensi';
+        $data['user']               = $curent_user;
+        $data['is_admin']           = is_admin($curent_user);
+        $data['login_type']         = get_login_type();
+        $data['main_content']       = 'addtoolstemplate';
+
+            $this->load->view(VIEW_BACK . 'template', $data);
+    }
+
+    function addtoolstemplateact(){
+        // auth_redirect();
+        $curent_user                = get_current_login();
+        $position               = $this->input->post('position');
+        $type                   = $this->input->post('type[]');
+        
+
+        $this->db->trans_begin();
+        $datetime = date('Y-m-d H:i:s');
+        // Save assessment Item
+        $data_template = array (
+            'id_position'   => $position,
+            'tools'         => implode(',',$type),
+            'name'         => '',
+        );
+
+        if (   !$template_id = $this->model_member->save_data('tools_template',$data_template) ){
+                    $this->db->trans_rollback();
+
+                    // Set JSON data
+                    $data = array(
+                        'message'       => 'error',
+                        'data'          => '<button class="close" data-close="alert"></button>Tambah Template tidak berhasil',
+                    );
+                    // JSON encode data
+                    die(json_encode($data));
+        }
+       
+        $this->db->trans_commit();
+       // Set JSON data
+        $data = array(
+            'message'       => 'success',
+            'data'          => '<button class="close" data-close="alert"></button>Tambah Template berhasil.',
+        );
+        // JSON encode data
+        die(json_encode($data));
+    }
+
+    function search_position(){
+            $posname = $this->input->get('posname');
+            $position_data = $this->model_member->search_position($posname);
+            echo json_encode($position_data);
+    }
+    function getprogramposition(){
+            $program = $this->input->get('program');
+            $posname = $this->input->get('posname');
+            $programposition = $this->model_member->get_program_position($program,$posname);
+            echo json_encode($programposition);
+    }
+    function getpositiontools(){
+            $position = $this->input->get('position');
+            $toolname = $this->input->get('toolname');
+            $positiontools = $this->model_member->get_position_tools($position,$toolname);
+            echo json_encode($positiontools);
+    }
+    function getparticipant(){
+            $position = $this->input->get('position');
+            $program = $this->input->get('program');
+            $name = $this->input->get('name');
+            $participants = $this->model_member->search_participant($program,$position,$name);
+            echo json_encode($participants);
+    }
+
+    function reportprogram($id=''){
+        auth_redirect();
+        $curent_user                = get_current_login();
+        $data['title']              = TITLE . 'Daftar Program';
+        $data['user']               = $curent_user;
+        $data['is_admin']           = is_admin($curent_user);
+        $data['login_type']         = get_login_type();
+        $data['main_content']       = 'programlist';
+
+        $this->load->view(VIEW_BACK . 'template', $data);
+    }
+
+    function reportprogramlist ($id = '' ){
+
+        $curent_user        = get_current_login();
+        $order_by           = '';
+        $condition          = ' WHERE 1 = 1 ';
+
+        $iDisplayLength = intval($_REQUEST['length']);
+        $iDisplayLength = $iDisplayLength < 0 ? 0 : $iDisplayLength; 
+        $iDisplayStart = intval($_REQUEST['start']);
+        $iTotalRecords = 0;
+        $records = array();
+        $records["data"] = array(); 
+
+        $sort               = $_REQUEST['order'][0]['dir'];
+        $column             = intval($_REQUEST['order'][0]['column']);
+
+        $limit              = ( $iDisplayLength == '-1' ? 0 : $iDisplayLength );
+        $offset             = $iDisplayStart;
+
+        $s_program_number  = $this->input->post('search_program_number');
+        $s_program_name    = $this->input->post('search_program_name');
+        // $s_position         = $this->input->post('search_position');
+        // $s_type             = $this->input->post('search_type');
+        // // $s_status           = $this->input->post('search_status');
+        // // $s_room             = $this->input->post('search_room');
+        // $s_time_min         = $this->input->post('search_time_min');
+        // $s_time_max         = $this->input->post('search_time_max');
+        // $s_date_min         = $this->input->post('search_date_min');
+        // $s_date_max         = $this->input->post('search_date_max');
+
+        if( !empty($s_program_number) )         { $condition .= str_replace('%s%', $s_program_number, ' AND %program_number% LIKE "%%s%%"'); }
+        if( !empty($s_program_name) )         { $condition .= str_replace('%s%', $s_program_name, ' AND %program_name% LIKE "%%s%%"'); }
+        // if( !empty($s_position) )       { $condition .= str_replace('%s%', $s_position, ' AND %position% LIKE "%%s%%"'); }
+        // if( !empty($s_type) )           { $condition .= str_replace('%s%', $s_type, ' AND %type% = "%s%"'); }
+        // if( !empty($s_status) )         { $condition .= str_replace('%s%', $s_status, ' AND %status% LIKE "%%s%%"'); }
+        // // if( !empty($s_room) )           { $condition .= str_replace('%s%', $s_room, ' AND %room% LIKE "%%s%%"'); }
+        // if( !empty($s_time_min) )       { $condition .= str_replace('%s%', $s_time_min, ' AND %time% >= "%s%:00"'); }
+        // if( !empty($s_time_max) )       { $condition .= str_replace('%s%', $s_time_max, ' AND %time% <= "%s%:00"'); }
+        // if( !empty($s_date_min) )       { $condition .= str_replace('%s%', $s_date_min, ' AND %date% >= "%s%"'); }
+        // if( !empty($s_date_max) )       { $condition .= str_replace('%s%', $s_date_max, ' AND %date% <= "%s%"'); }
+
+
+
+         // if( $column == 0 )      { $order_by .= '%program_number% ' . $sort; }
+         // elseif( $column == 1 )  { $order_by .= '%program_name% ' . $sort; }
+         // elseif( $column == 2 )  { $order_by .= '%date% ' . $sort; }
+         // elseif( $column == 3 )  { $order_by .= '%time% ' . $sort; }
+         // elseif( $column == 4 )  { $order_by .= '%room% ' . $sort; }
+
+        $program_data         = $this->model_member->get_assessment_program_list();
+        if( !empty($program_data) ){
+            $iTotalRecords  = get_last_found_rows();
+
+            $i = $iDisplayStart + 1;
+            foreach($program_data as $row){
+                // if($row->status == 0) { 
+                //     $status = '<center><span class="label label-md label-primary">Berjalan</span></center>'; 
+                // } elseif($row->status == 1){ 
+                //     $status = '<center><span class="label label-md label-primary">Berjalan</span></center>'; 
+                // } elseif($row->status == 2){ 
+                //     $status = '<center><span class="label label-md label-success">Selesai</span></center>'; 
+                // }
+                $pos_info = array();
+                $position = explode(',', $row->position);
+                foreach ($position as $pos) {
+                    $posdata = $this->model_member->get_position($pos);
+                    array_push($pos_info, $posdata->name);
+                }
+
+                $detailbutton   = '<a href="'.base_url('backend/programdetail/'.$row->id).'" class="btn btn-s btn-primary">Laporan Assessment</a>';
+                $detailbutton   .= '<br><br><a href="'.base_url('backend/assessmentreportfinal/'.$row->id).'" class="btn btn-s btn-primary">Laporan Akhir Program</a>';
+            
+                $records["data"][]    = array(
+                    '<center>'.$row->number.'</center>',
+                    '<center>'.$row->title.'</center>',
+                    '<center>'.$row->datestart.'</center>',
+                    '<center>'.$row->dateend.'</center>',
+                    '<center>'.$row->year.'</center>',
+                    '<center>'.$detailbutton.'</center>',
+                );               
+                $i++;
+            }   
+        }
+
+        $sEcho = intval($_REQUEST['draw']);
+        $end = $iDisplayStart + $iDisplayLength;
+        $end = $end > $iTotalRecords ? $iTotalRecords : $end;
+
+        if (isset($_REQUEST["customActionType"]) && $_REQUEST["customActionType"] == "group_action") {
+        $records["customActionStatus"] = "OK"; // pass custom message(useful for getting status of group actions)
+        $records["customActionMessage"] = "Group action successfully has been completed. Well done!"; // pass custom message(useful for getting status of group actions)
+        }
+
+        $records["draw"] = $sEcho;
+        $records["recordsTotal"] = $iTotalRecords;
+        $records["recordsFiltered"] = $iTotalRecords;
+
+        echo json_encode($records);
+    }
+
+    function programdetail($id = '' ){
+        auth_redirect();
+        $curent_user                = get_current_login();
+        $data['title']              = TITLE . 'Laporan Akhir Assessment';
+        $data['user']               = $curent_user;
+        $data['is_admin']           = is_admin($curent_user);
+        $data['login_type']         = get_login_type();
+        $data['id_program']         = $id;
+
+        // $con = ' where %id_program% = '.$id.' ';
+        // $data['assessment_report']         = $this->model_member->get_assessment_report_int($con);
+        $data['main_content']       = 'programdetail';
+        
+        // if ($id == '' || empty($id) ) {
+        //      redirect('backend/assessmentlist');
+        // } else {
+            $this->load->view(VIEW_BACK . 'template', $data);
+        // }
+    }
+
+    function programdetaildata ($id = '' ){
+
+        $curent_user        = get_current_login();
+        $order_by           = '';
+        $condition          = ' WHERE 1 = 1 and %id_program% = '.$id.' ';
+
+        $iDisplayLength = intval($_REQUEST['length']);
+        $iDisplayLength = $iDisplayLength < 0 ? 0 : $iDisplayLength; 
+        $iDisplayStart = intval($_REQUEST['start']);
+        $iTotalRecords = 0;
+        $records = array();
+        $records["data"] = array(); 
+
+        $sort               = $_REQUEST['order'][0]['dir'];
+        $column             = intval($_REQUEST['order'][0]['column']);
+
+        $limit              = ( $iDisplayLength == '-1' ? 0 : $iDisplayLength );
+        $offset             = $iDisplayStart;
+
+        $s_program_number  = $this->input->post('search_program_number');
+        $s_program_name    = $this->input->post('search_program_name');
+        // $s_position         = $this->input->post('search_position');
+        // $s_type             = $this->input->post('search_type');
+        // // $s_status           = $this->input->post('search_status');
+        // // $s_room             = $this->input->post('search_room');
+        // $s_time_min         = $this->input->post('search_time_min');
+        // $s_time_max         = $this->input->post('search_time_max');
+        // $s_date_min         = $this->input->post('search_date_min');
+        // $s_date_max         = $this->input->post('search_date_max');
+
+        if( !empty($s_program_number) )         { $condition .= str_replace('%s%', $s_program_number, ' AND %program_number% LIKE "%%s%%"'); }
+        if( !empty($s_program_name) )         { $condition .= str_replace('%s%', $s_program_name, ' AND %program_name% LIKE "%%s%%"'); }
+        // if( !empty($s_position) )       { $condition .= str_replace('%s%', $s_position, ' AND %position% LIKE "%%s%%"'); }
+        // if( !empty($s_type) )           { $condition .= str_replace('%s%', $s_type, ' AND %type% = "%s%"'); }
+        // if( !empty($s_status) )         { $condition .= str_replace('%s%', $s_status, ' AND %status% LIKE "%%s%%"'); }
+        // // if( !empty($s_room) )           { $condition .= str_replace('%s%', $s_room, ' AND %room% LIKE "%%s%%"'); }
+        // if( !empty($s_time_min) )       { $condition .= str_replace('%s%', $s_time_min, ' AND %time% >= "%s%:00"'); }
+        // if( !empty($s_time_max) )       { $condition .= str_replace('%s%', $s_time_max, ' AND %time% <= "%s%:00"'); }
+        // if( !empty($s_date_min) )       { $condition .= str_replace('%s%', $s_date_min, ' AND %date% >= "%s%"'); }
+        // if( !empty($s_date_max) )       { $condition .= str_replace('%s%', $s_date_max, ' AND %date% <= "%s%"'); }
+
+
+
+         // if( $column == 0 )      { $order_by .= '%program_number% ' . $sort; }
+         // elseif( $column == 1 )  { $order_by .= '%program_name% ' . $sort; }
+         // elseif( $column == 2 )  { $order_by .= '%date% ' . $sort; }
+         // elseif( $column == 3 )  { $order_by .= '%time% ' . $sort; }
+         // elseif( $column == 4 )  { $order_by .= '%room% ' . $sort; }
+
+        $program_detail         = $this->model_member->get_assessment_program_position_list($condition, $order_by);
+        if( !empty($program_detail) ){
+            $iTotalRecords  = get_last_found_rows();
+
+            $i = $iDisplayStart + 1;
+            foreach($program_detail as $row){
+                // if($row->status == 0) { 
+                //     $status = '<center><span class="label label-md label-primary">Berjalan</span></center>'; 
+                // } elseif($row->status == 1){ 
+                //     $status = '<center><span class="label label-md label-primary">Berjalan</span></center>'; 
+                // } elseif($row->status == 2){ 
+                //     $status = '<center><span class="label label-md label-success">Selesai</span></center>'; 
+                // }
+                // $pos_info = array();
+                // $position = explode(',', $row->position);
+                // foreach ($position as $pos) {
+                //     $posdata = $this->model_member->get_position($pos);
+                //     array_push($pos_info, $posdata->name);
+                // }
+
+                $detailbutton   = '<a href="'.base_url('backend/addassessmentreportint/'.$row->id_assessment_program.'/'.$row->reg_id).'" class="btn btn-s btn-primary">Laporan Interasi Gabungan</a>';
+            
+                $records["data"][]    = array(
+                    '<center>'.$row->program_number.'</center>',
+                    '<center>'.$row->program_title.'</center>',
+                    '<center>'.$row->position_name.'</center>',
+                    '<center>'.$row->reg_number.'s</center>',
+                    '<center>'.$row->reg_name.'s</center>',
+                    '<center>'.$detailbutton.'</center>',
+                );               
+                $i++;
+            }   
+        }
+
+        $sEcho = intval($_REQUEST['draw']);
+        $end = $iDisplayStart + $iDisplayLength;
+        $end = $end > $iTotalRecords ? $iTotalRecords : $end;
+
+        if (isset($_REQUEST["customActionType"]) && $_REQUEST["customActionType"] == "group_action") {
+        $records["customActionStatus"] = "OK"; // pass custom message(useful for getting status of group actions)
+        $records["customActionMessage"] = "Group action successfully has been completed. Well done!"; // pass custom message(useful for getting status of group actions)
+        }
+
+        $records["draw"] = $sEcho;
+        $records["recordsTotal"] = $iTotalRecords;
+        $records["recordsFiltered"] = $iTotalRecords;
+
+        echo json_encode($records);
+    }
+
+    function programdetaildataintlist ($id = '' ){
+
+        $curent_user        = get_current_login();
+        $order_by           = '';
+        $condition          = ' WHERE 1 = 1 and %id_program% = '.$id.' ';
+
+        $iDisplayLength = intval($_REQUEST['length']);
+        $iDisplayLength = $iDisplayLength < 0 ? 0 : $iDisplayLength; 
+        $iDisplayStart = intval($_REQUEST['start']);
+        $iTotalRecords = 0;
+        $records = array();
+        $records["data"] = array(); 
+
+        $sort               = $_REQUEST['order'][0]['dir'];
+        $column             = intval($_REQUEST['order'][0]['column']);
+
+        $limit              = ( $iDisplayLength == '-1' ? 0 : $iDisplayLength );
+        $offset             = $iDisplayStart;
+
+        $s_program_number  = $this->input->post('search_program_number');
+        $s_program_name    = $this->input->post('search_program_name');
+        // $s_position         = $this->input->post('search_position');
+        // $s_type             = $this->input->post('search_type');
+        // // $s_status           = $this->input->post('search_status');
+        // // $s_room             = $this->input->post('search_room');
+        // $s_time_min         = $this->input->post('search_time_min');
+        // $s_time_max         = $this->input->post('search_time_max');
+        // $s_date_min         = $this->input->post('search_date_min');
+        // $s_date_max         = $this->input->post('search_date_max');
+
+        if( !empty($s_program_number) )         { $condition .= str_replace('%s%', $s_program_number, ' AND %program_number% LIKE "%%s%%"'); }
+        if( !empty($s_program_name) )         { $condition .= str_replace('%s%', $s_program_name, ' AND %program_name% LIKE "%%s%%"'); }
+        // if( !empty($s_position) )       { $condition .= str_replace('%s%', $s_position, ' AND %position% LIKE "%%s%%"'); }
+        // if( !empty($s_type) )           { $condition .= str_replace('%s%', $s_type, ' AND %type% = "%s%"'); }
+        // if( !empty($s_status) )         { $condition .= str_replace('%s%', $s_status, ' AND %status% LIKE "%%s%%"'); }
+        // // if( !empty($s_room) )           { $condition .= str_replace('%s%', $s_room, ' AND %room% LIKE "%%s%%"'); }
+        // if( !empty($s_time_min) )       { $condition .= str_replace('%s%', $s_time_min, ' AND %time% >= "%s%:00"'); }
+        // if( !empty($s_time_max) )       { $condition .= str_replace('%s%', $s_time_max, ' AND %time% <= "%s%:00"'); }
+        // if( !empty($s_date_min) )       { $condition .= str_replace('%s%', $s_date_min, ' AND %date% >= "%s%"'); }
+        // if( !empty($s_date_max) )       { $condition .= str_replace('%s%', $s_date_max, ' AND %date% <= "%s%"'); }
+
+
+
+         // if( $column == 0 )      { $order_by .= '%program_number% ' . $sort; }
+         // elseif( $column == 1 )  { $order_by .= '%program_name% ' . $sort; }
+         // elseif( $column == 2 )  { $order_by .= '%date% ' . $sort; }
+         // elseif( $column == 3 )  { $order_by .= '%time% ' . $sort; }
+         // elseif( $column == 4 )  { $order_by .= '%room% ' . $sort; }
+
+        $program_detail         = $this->model_member->get_assessment_program_position_list('', '', $condition, $order_by);
+        if( !empty($program_detail) ){
+            $iTotalRecords  = get_last_found_rows();
+
+            $i = $iDisplayStart + 1;
+            foreach($program_detail as $row){
+                // if($row->status == 0) { 
+                //     $status = '<center><span class="label label-md label-primary">Berjalan</span></center>'; 
+                // } elseif($row->status == 1){ 
+                //     $status = '<center><span class="label label-md label-primary">Berjalan</span></center>'; 
+                // } elseif($row->status == 2){ 
+                //     $status = '<center><span class="label label-md label-success">Selesai</span></center>'; 
+                // }
+                // $pos_info = array();
+                // $position = explode(',', $row->position);
+                // foreach ($position as $pos) {
+                //     $posdata = $this->model_member->get_position($pos);
+                //     array_push($pos_info, $posdata->name);
+                // }
+
+                $detailbutton   = '<a href="'.base_url('backend/add/'.$row->id).'" class="btn btn-s btn-primary">Laporan Assessment</a>';
+            
+                $records["data"][]    = array(
+                    '<center>'.$row->program_number.'</center>',
+                    '<center>'.$row->program_title.'</center>',
+                    '<center>'.$row->position_name.'</center>',
+                    '<center>'.$row->reg_number.'s</center>',
+                    '<center>'.$row->reg_name.'s</center>',
+                    '<center>'.$detailbutton.'</center>',
+                );               
+                $i++;
+            }   
+        }
+
+        $sEcho = intval($_REQUEST['draw']);
+        $end = $iDisplayStart + $iDisplayLength;
+        $end = $end > $iTotalRecords ? $iTotalRecords : $end;
+
+        if (isset($_REQUEST["customActionType"]) && $_REQUEST["customActionType"] == "group_action") {
+        $records["customActionStatus"] = "OK"; // pass custom message(useful for getting status of group actions)
+        $records["customActionMessage"] = "Group action successfully has been completed. Well done!"; // pass custom message(useful for getting status of group actions)
+        }
+
+        $records["draw"] = $sEcho;
+        $records["recordsTotal"] = $iTotalRecords;
+        $records["recordsFiltered"] = $iTotalRecords;
+
+        echo json_encode($records);
+    }
+
+
 
 }

@@ -21,7 +21,7 @@
 			<!-- /.modal -->
 			<!-- END SAMPLE PORTLET CONFIGURATION MODAL FORM-->
 			<!-- BEGIN PAGE HEADER-->
-			<h3 class="page-title">Assesment</h3>
+			<h3 class="page-title">Program Assesment</h3>
 			<div class="page-bar">
 				<ul class="page-breadcrumb">
 					<li>
@@ -30,7 +30,7 @@
 						<i class="fa fa-angle-right"></i>
 					</li>
 					<li>
-						<a href="#">Assessment</a>
+						<a href="#">Program Assesment</a>
 						<i class="fa fa-angle-right"></i>
 					</li>
 					<li>
@@ -77,7 +77,7 @@
                                             <button class="close" data-close="alert"></button>
                                             Validasi formulir Anda berhasil! Data PIN sudah dibuat.
                                         </div>
-                                        <h3 class="form-section">Data Assesment</h3>
+                                        <h3 class="form-section">Data Program Assesment</h3>
                                         <div class="form-group">
 											<label class="col-md-3 control-label">Nomor</label>
 											<div class="col-md-4">
@@ -93,7 +93,7 @@
 										<div class="form-group">
 											<label class="col-md-3 control-label">Jabatan</label>
 											<div class="col-md-4">
-												<input type="text" class="form-control" name="position" placeholder="Jabatan" >
+												<input type="hidden" class="form-control select2 searchpositionprogram" name="position[]" data-url="<?php echo base_url('backend/search_position')?>">
 											</div>
 										</div>
 										<div class="form-group">
@@ -111,6 +111,24 @@
                 			                    </select>
 											</div>
 										</div>
+										<?php 	$assessor = '';
+										        $assessordata =  $this->model_member->get_assessor();
+										            if ($assessordata || !empty($assessordata)){
+										                foreach ($assessordata as $row ) {
+										                   $assessor .= '<option value="'.$row->id.'" >'.$row->name.'</option>';
+										                }
+										            } else{
+										                $assessor .= '<option value="" >Tidak ada pilihan assessor</option>';
+										}?>
+										<div class="form-group">
+			                                <label class="col-md-3 control-label">Lead Program Assesment</label>
+			                                <div class="col-md-4">
+			                                    <select class="form-control assessor bs-select" data-live-search="true" name="id_lead" id="id_lead">
+			                                        <option value="" id="deflead">Pilih Lead Program</option>
+			                                                <?php echo $assessor; ?>
+			                                    </select>
+			                                </div>
+			                            </div>
                                         <h3 class="form-section">Informasi Waktu Pelaksanaan</h3>
 										<div class="form-group">
 											<label class="control-label col-md-3">Tanggal</label>
@@ -147,32 +165,12 @@
 												<label class="col-md-3 control-label"> <a class="closerowdoc" data-close="doc-item">x</a> Dokumen</label>
 												<div class="col-md-4">
 													<input type="text" class="form-control" name="docs[]" placeholder="Jenis Dokumen" >
-
 												</div>
 											</div>
 						                </div>
 						                <a href="javascript:;" class="btn green addrowdoc">
 						                        <i class="fa fa-plus"></i> Tambah Dokumen Persyaratan
 						                    </a>
-                                        <h3 class="form-section">Pilihan Tools</h3>
-						                <div class="form-group">
-										<label class="control-label col-md-3">Pilih Tools yang Digunakan</label>
-										<div class="col-md-4">
-											<select id="toolsmultiselect" name="tools[]" class="form-control select2" multiple>
-                                                    <?php
-                			                        	$assessment_types = get_assessment_type();
-                			                        	if ($assessment_types || !empty($assessment_types)){
-                			                        		$types = "";
-                			                        		foreach($assessment_types as $row){
-												                $types .= '<option value="'.$row->id.'">'.$row->name.'</option>';
-												            }
-												            echo $types;
-                			                        	} else {
-                			                        		echo "<option value=''>Tidak ada pilihan assessment</option>";
-                			                        	} ?>
-                                                </select>
-                                            </div>
-                                        </div>
 									</div>
 									<div class="form-actions">
 										<div class="row">

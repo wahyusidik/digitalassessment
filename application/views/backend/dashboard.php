@@ -40,6 +40,7 @@ SELAMAT DATANG, <?php echo $user->name ;?>
 </h3>
 <div class="clearfix">
             </div>
+<?php if(get_login_type() != 4 ): ?>
 <div class="row">
     <div class="col-lg-12 col-md-12">
         <div class="portlet box green-haze">
@@ -73,6 +74,7 @@ SELAMAT DATANG, <?php echo $user->name ;?>
         </div>
     </div>
 </div>
+<?php endif?>
 <div class="clearfix">
             </div>
 <!-- END PAGE HEADER

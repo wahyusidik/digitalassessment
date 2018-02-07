@@ -45,6 +45,15 @@ var Metronic = function() {
             }
         });
     });
+    $('.level').each(function(){
+        $(this).change(function(e){
+            e.preventDefault();
+            var value = $(this).val();
+            $(this).closest('.paramfielditem').find('textarea').attr("required",true);
+            $(this).closest('.paramfielditem').find('textarea').attr("disabled",false);
+            $(this).closest('.paramfielditem').siblings('.paramfielditem').find('textarea').attr("disabled",true);
+        });
+    });
     $("body").delegate( "a.sendfeedback", "click", function( event ) {
         event.preventDefault();
         var url = $(this).attr('href');
@@ -208,13 +217,13 @@ var Metronic = function() {
     });
     }
     
-    $("body").delegate( ".level-title", "blur", function( event ) {
-        event.preventDefault();
-        var value = $(this).val();
-        var id_radio = $(this).attr('id-radio');
-        console.log(id_radio);
-        $('#'+id_radio).val(value);
-    });
+    // $("body").delegate( ".level-title", "blur", function( event ) {
+    //     event.preventDefault();
+    //     var value = $(this).val();
+    //     var id_radio = $(this).attr('id-radio');
+    //     console.log(id_radio);
+    //     $('#'+id_radio).val(value);
+    // });
     var handleAddChangeParamField = function(){
         var parent         = $(".parentfield");
         var param         = $(".paramfield"); //Fields wrapper
@@ -263,12 +272,341 @@ var Metronic = function() {
         });
     });
     }
+    var handleAddParticipant = function(){
+        var parent         = $("#participants-list"); //Fields wrapper
+        var out = $('#partlist');
+        var add_part      = $("#addparticipant"); //Add button ID
+        var x = 1; //initlal text box count
+        
+        out.delegate("#addparticipant","click", function(e){ //on add input button click
 
-    var handleGetTool = function(){
+            e.preventDefault();
+            alert('sa');
+            // if(x < max_fields){ //max input box allowed
+                out.find('#participants-list').append('<div class="form-group"><label class="col-md-2 control-label">Nama Peserta</label><div class="col-md-4"><select class="form-control" name="participants[]" class="participants"><option value="">Pilih peserta</option></select></div><label class="col-md-2 control-label">Nama assessor</label><div class="col-md-4"><select class="form-control" name="assessors[]" class="assessors"><option value="">Pilih assessor</option></select></div></div>'); //add input box
+                key++; //text box increment
+
+            // }
+        });
+        parent.delegate(".closerowdoc","click", function(e){ //user click on remove text
+            e.preventDefault(); $(this).closest('.doc-item').remove(); 
+        });
+    }
+    var handleAddAssessor = function(){
+        var parent         = $("#assessor-list"); //Fields wrapper
+        var max = parent.attr("max-assessor");
+        var out = $('#partlist');
+        var add_part      = $("#addassessor"); //Add button ID
+        var x = 2; //initlal text box count
+        
+        out.delegate("#addassessor","click", function(e){ //on add input button click
+
+            e.preventDefault();
+            alert('sa');
+            if(x < max){ //max input box allowed
+                out.find('#assessor-list').append('<div class="form-group"><label class="col-md-2 control-label">Assessor</label><div class="col-md-4"><select class="form-control" name="assessors[]" class="assessors"><option value="">Pilih Assessor</option></select></div></div>'); //add input box
+                x++; //text box increment
+
+            }
+        });
+        parent.delegate(".closerowdoc","click", function(e){ //user click on remove text
+            e.preventDefault(); $(this).closest('.doc-item').remove(); 
+        });
+    }
+    var handleInitSearch = function(){
+        var search =  $('.searchposition');
+        var url = search.attr("data-url");
+        search.select2({
+                placeholder: 'Masukkan Nama Posisi',
+                minimumInputLength: 1,
+                allowClear: true,
+                ajax:{
+                    url: url,
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params){
+                        return{
+                            posname: params
+                        };
+                    },
+                    results: function(data,page){
+                        var options = [];
+
+                        $.each(data, function(index, item){
+                            options.push({
+                                id: item.id,
+                                name: item.id,
+                                text: item.name
+                            });
+                        });
+                        return{
+                            results: options
+                        };
+                    }
+                }
+            });
+
+        var searchpositionprogram =  $('.searchpositionprogram');
+        var url = searchpositionprogram.attr("data-url");
+        searchpositionprogram.select2({
+                placeholder: 'Masukkan Nama Posisi',
+                minimumInputLength: 1,
+                allowClear: true,
+                multiple:true,
+                ajax:{
+                    url: url,
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params){
+                        return{
+                            posname: params
+                        };
+                    },
+                    results: function(data,page){
+                        var options = [];
+
+                        $.each(data, function(index, item){
+                            options.push({
+                                id: item.id,
+                                name: item.id,
+                                text: item.name
+                            });
+                        });
+                        return{
+                            results: options
+                        };
+                    }
+                }
+            });
+        
+    }
+    var handleInitProgramPosition = function(){
+        var programposition = $('.programposition');
+        var program         = $('#program').val();
+        var urlposition     = programposition.attr('search-url');
+        programposition.select2({
+                placeholder: 'Masukkan Nama Posisi',
+                minimumInputLength: 0,
+                allowClear: true,
+                ajax:{
+                    url: urlposition,
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params){
+                        return{
+                            posname: params,
+                            program: program,
+                        };
+                    },
+                    results: function(data,page){
+                        var options = [];
+
+                        $.each(data, function(index, item){
+                            options.push({
+                                id: item.id,
+                                name: item.id,
+                                text: item.name
+                            });
+                        });
+                        return{
+                            results: options
+                        };
+                    }
+                }
+            });
+    }
+    var handleInitPositionTools = function(){
+        var positiontools = $('.positiontools');
+        var position         = $('#position').val();
+        var urlposition     = positiontools.attr('search-url');
+        positiontools.select2({
+                placeholder: 'Masukkan Tipe Assessment',
+                minimumInputLength: 0,
+                allowClear: true,
+                ajax:{
+                    url: urlposition,
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params){
+                        return{
+                            toolname: params,
+                            position: position,
+                        };
+                    },
+                    results: function(data,page){
+                        var options = [];
+
+                        $.each(data, function(index, item){
+                            options.push({
+                                id: item.id,
+                                name: item.id,
+                                text: item.name
+                            });
+                        });
+                        return{
+                            results: options
+                        };
+                    }
+                }
+            });
+    }
+    var handleGetPosition = function(){
         // Change Package on register member using PIN
         $('#program').change(function(){
+            // handleInitProgramPosition();
+        var programposition = $('.programposition');
+        var program         = $(this).val();
+        var urlposition     = $(this).attr('data-position');
+        programposition.select2({
+                placeholder: 'Masukkan Nama Posisi',
+                minimumInputLength: 0,
+                allowClear: true,
+                ajax:{
+                    url: urlposition,
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params){
+                        return{
+                            posname: params,
+                            program: program,
+                        };
+                    },
+                    results: function(data,page){
+                        var options = [];
+
+                        $.each(data, function(index, item){
+                            options.push({
+                                id: item.id,
+                                name: item.id,
+                                text: item.name
+                            });
+                        });
+                        return{
+                            results: options
+                        };
+                    }
+                }
+            });
+        });
+    }
+    var handleGetTool= function(){
+        // Change Package on register member using PIN
+        $('#position').change(function(){
+            // handleInitProgramPosition();
+        var positiontools = $('.positiontools');
+        var position         = $(this).val();
+        var urltools     = $(this).attr('data-tools');
+        positiontools.select2({
+                placeholder: 'Masukkan Tipe Assessment',
+                minimumInputLength: 0,
+                allowClear: true,
+                ajax:{
+                    url: urltools,
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params){
+                        return{
+                            toolname: params,
+                            position: position,
+                        };
+                    },
+                    results: function(data,page){
+                        var options = [];
+
+                        $.each(data, function(index, item){
+                            options.push({
+                                id: item.id,
+                                name: item.id,
+                                text: item.name
+                            });
+                        });
+                        return{
+                            results: options
+                        };
+                    }
+                }
+            });
+        });
+    }
+    var handleResetTool= function(){
+        // Change Package on register member using PIN
+        $('#position').change(function(){
+            // handleInitProgramPosition();
+        var positiontools = $('.positiontools');
+        var position         = $(this).val();
+        var tools     = $('#type');
+        tools.val("").change();
+        });
+    }
+    var handleGetCompetence = function(){
+        $('#position').change(function(){
             var url     = $(this).data('url');
             var val     = $(this).val();
+            var el      = $('.parentfield');
+            // var position = $('#position').val();
+            var msg     = $('#alert');
+
+                if( val == '' || !val ){
+                    msg.removeClass('alert-success').addClass('alert-danger').empty().hide();
+                    el.empty().html('<h5> Silakan Pilih Tipe Assessment Terlebih Dahulu</h5>').fadeIn();
+                    return false;
+                }
+
+                $.ajax({
+                    type:   "POST",
+                    data:   { 'position' : val  },
+                    url:    url,
+                    beforeSend: function (){
+                        // $("div#mask").fadeIn();
+                    },
+                    success: function( response ){
+                        response = $.parseJSON(response);
+                        // $("div#mask").fadeOut();
+                        el.parent().parent().removeClass('has-error');
+                        el.parent().parent().find('.help-block').empty().hide();
+                        el.empty();
+                        el.html(response.result).hide().fadeIn('fast');
+                        $('.popovers').popover();
+                    }
+                });
+            return false;
+        });
+    }
+    var handleInitCompetence = function(){
+            var url     = $('#position').data('url');
+            var val     = $('#position').val();
+            var el      = $('.parentfield');
+            // var position = $('#position').val();
+            var msg     = $('#alert');
+
+                if( val == '' || !val ){
+                    msg.removeClass('alert-success').addClass('alert-danger').empty().hide();
+                    el.empty().html('<h5> Silakan Pilih Tipe Assessment Terlebih Dahulu</h5>').fadeIn();
+                    return false;
+                }
+
+                $.ajax({
+                    type:   "POST",
+                    data:   { 'position' : val  },
+                    url:    url,
+                    beforeSend: function (){
+                        // $("div#mask").fadeIn();
+                    },
+                    success: function( response ){
+                        response = $.parseJSON(response);
+                        // $("div#mask").fadeOut();
+                        el.parent().parent().removeClass('has-error');
+                        el.parent().parent().find('.help-block').empty().hide();
+                        el.empty();
+                        el.html(response.result).hide().fadeIn('fast');
+                        $('.popovers').popover();
+                    }
+                });
+            return false;
+    }
+    var handleInitTool = function(){
+            var url     = $('#program').data('url');
+            var val     = $('#program').val();
             var el      = $('#type');
             var msg     = $('#alert');
 
@@ -295,8 +633,89 @@ var Metronic = function() {
                     }
                 });
             return false;
+    }
+    var handleInitFormPart = function(){
+            var url     = $('#type').data('url');
+            var val     = $('#type').val();
+            var el      = $('#partlist');
+            var position = $('#position').val();
+            var msg     = $('#alert');
+
+                if( val == '' || !val ){
+                    msg.removeClass('alert-success').addClass('alert-danger').empty().hide();
+                    el.empty().html('<h5> Silakan Pilih Tipe Assessment Terlebih Dahulu</h5>').fadeIn();
+                    return false;
+                }
+
+                $.ajax({
+                    type:   "POST",
+                    data:   { 'type' : val, 'position' : position  },
+                    url:    url,
+                    beforeSend: function (){
+                        // $("div#mask").fadeIn();
+                    },
+                    success: function( response ){
+                        response = $.parseJSON(response);
+                        // $("div#mask").fadeOut();
+                        el.parent().parent().removeClass('has-error');
+                        el.parent().parent().find('.help-block').empty().hide();
+                        el.empty();
+                        el.html(response.result).hide().fadeIn('fast');
+                        ComponentsDropdowns.init();
+                        $('.assessor').each(function(){
+                            $(this).select2({
+                            placeholder: "Pilih assessor",
+                            allowClear: true
+                        });
+                        });
+                    }
+                });
+            return false;
+    }
+    var handleGetFormPart = function(){
+        // Change Package on register member using PIN
+        $('#type').change(function(){
+            var url     = $(this).data('url');
+            var val     = $(this).val();
+            var el      = $('#partlist');
+            var position = $('#position').val();
+            var program = $('#program').val();
+            var msg     = $('#alert');
+
+                if( val == '' || !val ){
+                    msg.removeClass('alert-success').addClass('alert-danger').empty().hide();
+                    el.empty().html('<h5> Silakan Pilih Tipe Assessment Terlebih Dahulu</h5>').fadeIn();
+                    return false;
+                }
+
+                $.ajax({
+                    type:   "POST",
+                    data:   { 'type' : val,'program' : program, 'position' : position  },
+                    url:    url,
+                    beforeSend: function (){
+                        // $("div#mask").fadeIn();
+                    },
+                    success: function( response ){
+                        response = $.parseJSON(response);
+                        // $("div#mask").fadeOut();
+                        el.parent().parent().removeClass('has-error');
+                        el.parent().parent().find('.help-block').empty().hide();
+                        el.empty();
+                        el.html(response.result).hide().fadeIn('fast');
+                        ComponentsDropdowns.init();
+
+                        $('.assessor').each(function(){
+                            $(this).select2({
+                            placeholder: "Pilih assessor",
+                            allowClear: true
+                        });
+                        });
+                    }
+                });
+            return false;
         }).change();
     }
+    
     // initializes main settings
     var handleInit = function() {
 
@@ -794,7 +1213,7 @@ var Metronic = function() {
     var handleSelect2 = function() {
         if ($().select2) {
             $('.select2me').select2({
-                placeholder: "Select",
+                placeholder: "Pilih",
                 allowClear: true
             });
         }
@@ -868,11 +1287,23 @@ var Metronic = function() {
             //Handle group element heights
             handleHeight();
             this.addResizeHandler(handleHeight); // handle auto calculating height on window resize
-            
+            // handleInitTool();
+            handleInitFormPart();
+            handleInitCompetence();
             handleAddChangeParamField();
             handleAddChangeParentField();
             handleAddDoc();
-            handleGetTool();
+            // handleGetTool();
+            handleGetFormPart();
+            handleAddParticipant();
+            handleAddAssessor();
+            handleGetCompetence();
+            handleInitSearch();
+            handleInitProgramPosition();
+            handleGetPosition();
+            handleResetTool();
+            // handleInitPositionTools();
+            // handleGetTool();
             // Hacks
             handleFixInputPlaceholderForIE(); //IE8 & IE9 input placeholder issue fix
         },

@@ -65,7 +65,7 @@ Change Quick Sidebar Width
     text-decoration: none;
 }*/
 tbody td {
-  vertical-align: middle!important;
+  /*vertical-align: middle!important;*/
 }
 .blockUI{
   display: block!important;
@@ -77,4 +77,8 @@ tbody td {
 .comp-form{
       margin-bottom: 25px;
     border-bottom: 1px solid #eee;
+}
+
+.evidencedetail{
+  padding-left: 17px!important;
 }

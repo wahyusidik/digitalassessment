@@ -48,6 +48,8 @@ if ( !function_exists('get_current_login') )
                 $current_user = $CI->model_member->get_data('assessor',$con);
             } elseif( $type == 3 ) {
                 $current_user = $CI->model_member->get_data('user',$con);
+            } elseif( $type == 4 ) {
+                $current_user = $CI->model_member->get_data('user',$con);
             }
             if(isset($current_user->password)) unset($current_user->password);
             return $current_user;
@@ -64,7 +66,7 @@ if ( !function_exists('is_admin') )
         $CI =& get_instance();
         $con['id'] = $userdata->id;
         if ( $data = $CI->model_member->get_data('user',$con)) {
-            if ( $data->type == 0 ) {
+            if ( $data->type == 0 || $data->type == 4) {
                 return true;
             } else{
                 return false ;
@@ -82,7 +84,7 @@ if ( !function_exists('is_admin_login') )
     {   
         $CI =& get_instance();
         if ( $CI->session->userdata('logged_in') ) {
-            if ( $CI->session->userdata('type') == 0 ) {
+            if ( $CI->session->userdata('type') == 0 || $CI->session->userdata('type') == 4 ) {
                 return true;
             }
         }
@@ -443,5 +445,57 @@ if ( !function_exists('get_program_tools') )
         if(!$query || !$query->num_rows()) return false;
         
         return $query->result();
+    }
+}
+
+if ( !function_exists('get_competence') )
+{
+    function get_competence($id_position)
+    {   
+        if(!$id || empty($id)) return false;
+        $CI =& get_instance();
+        $con['id'] = $id;
+        $con['return_type'] = 'single';
+        $templatedata = $CI->model_member->get_data('competence_profile_template',$con);
+        if(!$templatedata || empty($templatedata)) return false;
+        $competence = (empty($templatedata->competence) ? 0: $templatedata->competence);
+        $sql = ' SELECT * FROM sdmp_assessment_type WHERE id IN('.$competence.') ORDER BY NAME ASC ';
+        
+        $query = $CI->db->query($sql);
+        if(!$query || !$query->num_rows()) return false;
+        
+        return $query->result();
+    }
+}
+
+
+if ( !function_exists('get_competence_template') )
+{
+    function get_competence_template($id_position)
+    {
+        $CI =& get_instance();
+
+        if( empty($id_position) || !$id_position ) return false;
+
+        $competence_profile = $CI->model_member->get_competence_profil($id_position);
+        $competences = (!empty($competence_profile->competences) || $competence_profile->competences ? $competence_profile->competences : 0 );
+        $sql = ' SELECT * FROM sdmp_competence 
+                WHERE id in('.$competences.')
+                ORDER by id ASC';
+        $query = $CI->db->query($sql);
+        if(!$query || !$query->num_rows()) return false;
+        return $query->result();
+    }
+}
+
+if ( !function_exists('isset_input') )
+{
+    function isset_input( &$val, $default=NULL, $default_on_empty=false )
+    {
+        if( isset($val) )
+            $tmp = ($default_on_empty && empty($val) ? $default : $val);
+        else
+            $tmp = $default;
+        return $tmp;
     }
 }

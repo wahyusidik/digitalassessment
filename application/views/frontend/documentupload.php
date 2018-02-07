@@ -1,4 +1,4 @@
- BEGIN CONFIGURATION MODAL FORM-->
+<!-- BEGIN CONFIGURATION MODAL FORM-->
 <div class="modal fade" id="portlet-config" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

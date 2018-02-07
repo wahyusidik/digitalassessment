@@ -511,13 +511,13 @@ var FormValidation = function () {
                     type: "Jenis diperlukan",
                     title: "Judul diperlukan",
                     year: "Tahun diperlukan",
-                    position: "Posisi diperlukan",
+                    'position[]': "Posisi diperlukan",
                     datestart: "Tanggal selesai diperlukan",
                     dateend: "Tanggal selesai diperlukan",
                     uploadstart: "Tanggal mulai unggah dokumen diperlukan",
                     uploadend: "Tanggal selesai unggah dokumen diperlukan",
+                    id_lead: "Lead program assessment diperlukan",
                     'docs[]': "Jenis dokumen diperlukan",
-                    'tools[]': "Tools diperlukan",
                 },
                 rules: {
                     title: {
@@ -532,7 +532,7 @@ var FormValidation = function () {
                     year: {
                         required: true,
                     },
-                    position: {
+                    'position[]': {
                         required: true,
                     },
                     datestart: {
@@ -547,10 +547,10 @@ var FormValidation = function () {
                     uploadend: {
                         required: true,
                     },
-                    'docs[]': {
-                        required: true
+                    id_lead: {
+                        required: true,
                     },
-                    'tools[]': {
+                    'docs[]': {
                         required: true
                     },
                 },
@@ -597,6 +597,10 @@ var FormValidation = function () {
                                         error.hide();
                                         success.empty();
                                         success.html(response.data).fadeIn('fast');
+                                        formassessment[0].reset();
+                                        $('input.searchpositionprogram').select2("val", "");
+                                        $('#deflead').attr("selected",true);
+                                        $('#id_lead').val("").trigger('change');
                                         Metronic.scrollTo(formassessment, -200);
 
                                     }
@@ -710,6 +714,11 @@ var FormValidation = function () {
                                         error.hide();
                                         success.empty();
                                         success.html(response.data).fadeIn('fast');
+                                        formassessment[0].reset();
+                                        $('#partlist').html('<h5> Silakan Pilih Tipe Assessment Terlebih Dahulu</h5>');
+                                        $('.select2').select2('val','');
+                                        $('#position').attr("selected",true);
+                                        $('#position').select2('val','');
                                         Metronic.scrollTo(formassessment, -200);
 
                                     }
@@ -804,10 +813,39 @@ var FormValidation = function () {
             // http://docs.jquery.com/Plugins/Validation
 
         var formreport = $('.addreportform');
-        // var id = form.attr('id');
+        var type = formreport.attr('data-type');
         // var form_id = $('#'+id);
         var error = $('.alert-danger', formreport);
         var success = $('.alert-success', formreport);
+
+        if (type == 1){
+        var    rule = {
+                    note_assesse: {
+                        required: true
+                    },
+                    'note_assesse_other[]': {
+                        required: true
+                    },
+                    'competences[]': {
+                        required: true
+                    },
+                    'paramtext[]':{
+                        required:true
+                    },
+                }
+        }else{
+         var   rule = {
+                    notes: {
+                        required: true
+                    },
+                    'competences[]': {
+                        required: true
+                    },
+                    'paramtext[]':{
+                        required:true
+                    },
+                }
+        }
         formreport.validate({
             errorElement: 'span', //default input error message container
             errorClass: 'help-block help-block-error', // default input error message class
@@ -815,24 +853,9 @@ var FormValidation = function () {
             ignore: "",  // validate all fields including form hidden input
             messages: {
                 note_assesse:"Isian ini diperlukan.",
+                'competences[]':"Isian ini diperlukan",
             } ,
-            rules: {
-                    note_assesse: {
-                        required: true
-                    },
-                    'note_assesse_other[]': {
-                        required: true
-                    },
-                },
-            fields: {
-                'note_assesse_other[]': {
-                    validators: {
-                        notEmpty: {
-                            message: 'The editor names are required'
-                        }
-                    }
-                }
-            },
+            rules: rule,
 
             invalidHandler: function (event, validator) { //display error alert on form submit              
                 success.hide();
@@ -880,6 +903,8 @@ var FormValidation = function () {
                                     formreport.find('textarea').attr('readonly','true');
                                     formreport.find('input[type=radio]').attr('disabled', true);
                                     formreport.find('button').addClass('disabled');
+                                    formreport.find('button').remove();
+
                                     // alert(id);
                                     Metronic.scrollTo(formreport, -200);
 
@@ -955,9 +980,10 @@ var FormValidation = function () {
                                         success.empty();
                                         success.html(response.data).fadeIn('fast');
                                         form_id.find('input').attr('readonly','true');
-                                        form_id.find('input[type=radio]').attr('disabled', true);
                                         form_id.find('textarea').attr('readonly','true');
+                                        form_id.find('input[type=radio]').attr('disabled', true);
                                         form_id.find('button').addClass('disabled');
+                                        form_id.find('button').remove();
                                         Metronic.scrollTo(form_id, -200);
 
                                     }
@@ -1045,6 +1071,273 @@ var FormValidation = function () {
                 });
             });
     }
+    var handleValidationAddCompetence = function() {
+        // for more info visit the official plugin documentation: 
+            // http://docs.jquery.com/Plugins/Validation
+
+            var formassessment = $('#addcompetence');
+            
+            var error = $('.alert-danger', formassessment);
+            var success = $('.alert-success', formassessment);
+
+            formassessment.validate({
+                errorElement: 'span', //default input error message container
+                errorClass: 'help-block help-block-error', // default input error message class
+                focusInvalid: false, // do not focus the last invalid input
+                ignore: "",  // validate all fields including form hidden input
+                messages: {
+                    name: "Nama diperlukan.",
+                    name_short: "Nama pendek diperlukan",
+                    desc: "Deskripsi diperlukan",
+                    'levelname[]': "Level diperlukan",
+                    'leveldesc[]': "Deskripsi level diperlukan",
+                },
+                rules: {
+                    name: {
+                        required: true
+                    },
+                    name_short: {
+                        required: true
+                    },
+                    desc: {
+                        required: true,
+                    },
+                    'levelname[]': {
+                        required: true,
+                    },
+                    'leveldesc[]': {
+                        required: true,
+                    },
+                },
+
+                invalidHandler: function (event, validator) { //display error alert on form submit              
+                    success.hide();
+                    error.show();
+                    Metronic.scrollTo(error, -200);
+                },
+
+                highlight: function (element) { // hightlight error inputs
+                    $(element)
+                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+                },
+
+                unhighlight: function (element) { // revert the change done by hightlight
+                    $(element)
+                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+                },
+
+                success: function (label) {
+                    label
+                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+                },
+
+                submitHandler: function (form) {
+                    bootbox.confirm("Simpan Data Assessment ?", function(result) {
+                        if( result == true ){
+                            $.ajax({
+                                type:   "POST",
+                                url:    $(form).attr('action'),
+                                data: $(form).serialize(),
+                                beforeSend: function (){
+                                },
+                                success: function( response ){
+                                    response = $.parseJSON(response);
+                                    if(response.message == 'error'){
+                                        success.hide();
+                                        error.empty();
+                                        error.html(response.data).fadeIn('fast');
+                                        Metronic.scrollTo(formassessment, -200);
+
+                                    }else if(response.message == 'success'){
+                                        error.hide();
+                                        success.empty();
+                                        success.html(response.data).fadeIn('fast');
+                                        Metronic.scrollTo(formassessment, -200);
+
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+
+    }
+    var handleValidationEditCompetence = function() {
+        // for more info visit the official plugin documentation: 
+            // http://docs.jquery.com/Plugins/Validation
+
+            var formassessment = $('#editcompetence');
+            
+            var error = $('.alert-danger', formassessment);
+            var success = $('.alert-success', formassessment);
+
+            formassessment.validate({
+                errorElement: 'span', //default input error message container
+                errorClass: 'help-block help-block-error', // default input error message class
+                focusInvalid: false, // do not focus the last invalid input
+                ignore: "",  // validate all fields including form hidden input
+                messages: {
+                    name: "Nama diperlukan.",
+                    name_short: "Nama pendek diperlukan",
+                    desc: "Deskripsi diperlukan",
+                    'levelname[]': "Level diperlukan",
+                    'leveldesc[]': "Deskripsi level diperlukan",
+                },
+                rules: {
+                    name: {
+                        required: true
+                    },
+                    name_short: {
+                        required: true
+                    },
+                    desc: {
+                        required: true,
+                    },
+                    'levelname[]': {
+                        required: true,
+                    },
+                    'leveldesc[]': {
+                        required: true,
+                    },
+                },
+
+                invalidHandler: function (event, validator) { //display error alert on form submit              
+                    success.hide();
+                    error.show();
+                    Metronic.scrollTo(error, -200);
+                },
+
+                highlight: function (element) { // hightlight error inputs
+                    $(element)
+                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+                },
+
+                unhighlight: function (element) { // revert the change done by hightlight
+                    $(element)
+                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+                },
+
+                success: function (label) {
+                    label
+                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+                },
+
+                submitHandler: function (form) {
+                    bootbox.confirm("Simpan Data Assessment ?", function(result) {
+                        if( result == true ){
+                            $.ajax({
+                                type:   "POST",
+                                url:    $(form).attr('action'),
+                                data: $(form).serialize(),
+                                beforeSend: function (){
+                                },
+                                success: function( response ){
+                                    response = $.parseJSON(response);
+                                    if(response.message == 'error'){
+                                        success.hide();
+                                        error.empty();
+                                        error.html(response.data).fadeIn('fast');
+                                        Metronic.scrollTo(formassessment, -200);
+
+                                    }else if(response.message == 'success'){
+                                        error.hide();
+                                        success.empty();
+                                        success.html(response.data).fadeIn('fast');
+                                        Metronic.scrollTo(formassessment, -200);
+
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+
+    }
+    var handleValidationAddToolsTemplate = function() {
+        // for more info visit the official plugin documentation: 
+            // http://docs.jquery.com/Plugins/Validation
+
+            var formassessment = $('#addtoolstemplate');
+            
+            var error = $('.alert-danger', formassessment);
+            var success = $('.alert-success', formassessment);
+
+            formassessment.validate({
+                errorElement: 'span', //default input error message container
+                errorClass: 'help-block help-block-error', // default input error message class
+                focusInvalid: false, // do not focus the last invalid input
+                ignore: "",  // validate all fields including form hidden input
+                messages: {
+                    position: "Posisi diperlukan.",
+                    'type[]': "Tipe Assessment diperlukan",
+                },
+                rules: {
+                    position: {
+                        required: true
+                    },
+                    'type[]': {
+                        required: true,
+                    },
+                },
+
+                invalidHandler: function (event, validator) { //display error alert on form submit              
+                    success.hide();
+                    error.show();
+                    Metronic.scrollTo(error, -200);
+                },
+
+                highlight: function (element) { // hightlight error inputs
+                    $(element)
+                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+                },
+
+                unhighlight: function (element) { // revert the change done by hightlight
+                    $(element)
+                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+                },
+
+                success: function (label) {
+                    label
+                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+                },
+
+                submitHandler: function (form) {
+                    bootbox.confirm("Simpan Data Template ?", function(result) {
+                        if( result == true ){
+                            $.ajax({
+                                type:   "POST",
+                                url:    $(form).attr('action'),
+                                data: $(form).serialize(),
+                                beforeSend: function (){
+                                },
+                                success: function( response ){
+                                    response = $.parseJSON(response);
+                                    if(response.message == 'error'){
+                                        success.hide();
+                                        error.empty();
+                                        error.html(response.data).fadeIn('fast');
+                                        Metronic.scrollTo(formassessment, -200);
+
+                                    }else if(response.message == 'success'){
+                                        error.hide();
+                                        success.empty();
+                                        success.html(response.data).fadeIn('fast');
+                                        Metronic.scrollTo(formassessment, -200);
+
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+
+    }
     var handleWysihtml5 = function() {
         if (!jQuery().wysihtml5) {
             
@@ -1072,7 +1365,11 @@ var FormValidation = function () {
 
             handleValidationAddReportLgd(); 
             handleValidationAddReportFinal();
+            handleValidationAddCompetence();
+            handleValidationEditCompetence();
+            handleValidationAddToolsTemplate();
 
+            $.extend($.validator.messages, { required: "Isian ini diperlukan" });
 
         }
 

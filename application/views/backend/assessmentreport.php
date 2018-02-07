@@ -53,14 +53,14 @@ Laporan Assessment
                 </div>
             </div>            
             <div class="portlet-body util-btn-margin-bottom-5">
-                <table class="table table-striped table-bordered table-advance dataTable table-hover" id="myassessment" data-url="<?php echo base_url('backend/assessmentmine/').$user->id.'/1'; ?>">
+                <table class="table table-striped table-bordered table-advance dataTable table-hover" id="myassessment" data-url="<?php echo base_url('backend/assessmentmine/').$user->id.''; ?>">
                     <thead>
                         <tr role="row" class="heading">
                             <th width="15%" style="text-align: center;">Tanggal</th>
                             <th width="10%" style="text-align: center;">Jam</th>
                             <th width="10%" style="text-align: center;">Nomor</th>
                             <th width="15%" style="text-align: center;">Jenis</th>
-                            <th width="10%" style="text-align: center;">Posisi</th>
+                            <th width="10%" style="text-align: center;">Jabatan</th>
                             <th width="10%" style="text-align: center;">Ruangan</th>
                             <th width="15%" style="text-align: center;">Status</th>
                             <th width="15%" style="text-align: center;">Aksi</th>

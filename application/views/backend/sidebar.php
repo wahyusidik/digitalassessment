@@ -42,6 +42,21 @@ $login_type = get_login_type();
                     </form>
                     <!-- END RESPONSIVE QUICK SEARCH FORM -->
                 </li>
+            <?php if($login_type == 4 ):?>
+                
+                <li class="<?php echo ($main_content == 'addtoolstemplate' ) ? 'active' : '' ?>">
+                    <a href="<?php echo base_url('backend/addtoolstemplate');?>">
+                    <i class="icon-note"></i>
+                    <span class="title">Tambah Template Jabatan Tools</span>
+                    </a>
+                </li>
+                <li class="<?php echo ($main_content == 'addcompetence' ) ? 'active' : '' ?>">
+                    <a href="<?php echo base_url('backend/addcompetence');?>">
+                    <i class="icon-note"></i>
+                    <span class="title">Tambah Kompetensi</span>
+                    </a>
+                </li>
+            <?php else:?>
                 <?php if($login_type == 3 ):?>
                 <li class="start <?php echo ($main_content == 'reportlead') ? 'active open' : '' ?>">
                     <a href="<?php echo base_url();?>backend/report">
@@ -75,9 +90,15 @@ $login_type = get_login_type();
                         </li>
                     </ul>
                 </li>
+                
             <?php endif ?>
             <?php if($login_type != 3 ):?>
-
+                <li class="<?php echo ($main_content == 'addassessmentprogram' ) ? 'active' : '' ?>">
+                    <a href="<?php echo base_url('backend/addassessmentprogram');?>">
+                    <i class="icon-note"></i>
+                    <span class="title">Tambah Program Assessment</span>
+                    </a>
+                </li>
                 <li class="<?php echo ($main_content == 'addassessment' || $main_content == 'assessmentlist' || $main_content == 'assessmentreport' ) ? 'active open' : '' ?>">
                     <a href="javascript:;">
                     <i class="icon-note"></i>
@@ -104,8 +125,14 @@ $login_type = get_login_type();
                         </li>
                     </ul>
                 </li>
+                <li class="<?php echo ($main_content == 'programlist' ) ? 'active' : '' ?>">
+                    <a href="<?php echo base_url('backend/reportprogram');?>">
+                    <i class="icon-note"></i>
+                    <span class="title">Laporan Program</span>
+                    </a>
+                </li>
             <?php endif ?>
-
+<?php endif?>
             </ul>
             <!-- END SIDEBAR MENU -->
         </div>
